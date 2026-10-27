@@ -71,6 +71,16 @@ def _visual(f):
         ("app_pages/gpu_sim.py", "Watch the GPUs at work"))
 
 
+def _my_prompt(f):
+    return Answer(
+        "Open **Try your own prompt** (top of the sidebar). Type any question and press **Run on the real model**: "
+        "the real OLMoE model reads it and records which 8 of 64 experts each word uses in every layer. Those experts "
+        "then light up on the simulated GPUs for each placement method, so you can see whether our plan, built from "
+        "3 training questions, still works on your prompt. The first run loads the model (about 10–60 seconds, "
+        "about 15 GB of memory); after that each prompt takes seconds. Nothing is saved to disk.",
+        ("app_pages/my_prompt.py", "Try your own prompt"))
+
+
 def _random(f):
     v = f["validation"]
     da = v["table"].set_index("strategy").loc["demand_aware"]
@@ -231,6 +241,9 @@ TOPICS = [
     Topic("method", ("method", "methodology", "distribute", "distribution", "algorithm", "how are experts",
                      "placement", "place", "assign", "greedy", "demand-aware", "demand aware"),
           ("How are the experts distributed?", "What is the placement method?"), _method),
+    Topic("my_prompt", ("my prompt", "own prompt", "my own", "my question", "type a prompt", "write a prompt",
+                        "custom prompt", "new prompt", "try a prompt", "enter a prompt", "run the model"),
+          ("Can I try my own prompt?",), _my_prompt),
     Topic("visual", ("visual", "visualise", "visualize", "animation", "animate", "watch", "picture", "see the gpus",
                      "show me the gpus", "gpu simulation", "simulator", "step by step"),
           ("Can I see the experts being placed on the GPUs?", "Is there a visual simulation?"), _visual),

@@ -79,6 +79,7 @@ order in `ui.STORY`). Simulation settings sit in a collapsed "Change the simulat
 | Part 1 · real data | 1. What is inside the model? (`model.py`) | config.json, index.json, phase4f/memory |
 | Part 1 · real data | 2. Which experts are busy? (`routing.py`) | workload_routing / timings (+ new measurement runs) |
 | Part 2 · simulation | 3. Where should experts go? (`placement.py`) | live placement under the session scenario |
+| Top | Try your own prompt (`my_prompt.py`, `dashboard/live_model.py`) | the only page that runs OLMoE: on button press, loads the local checkpoint in BF16 (never downloads), records the user's prompt's top-8 routing per layer (real), and replays it on the simulated GPUs for each placement (simulated). Nothing written to disk |
 | Part 2 · simulation | 3b. Watch the GPUs at work (`gpu_sim.py`, view model `dashboard/gpu_viz.py`) | animated placement (same order as `placement.assign`) and one real question flowing through the layers; simplified compute-only layer barrier, labelled as such |
 | Part 2 · simulation | 4. How fast would requests run? (`inference.py`) | live event simulation with traces |
 | Part 3 · simulation | 5. Should we move experts? (`migration.py`) | live controller + session-only sandbox |

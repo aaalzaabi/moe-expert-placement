@@ -23,7 +23,7 @@ CASES = {
     "how do I run the dashboard": "run", "what are the results": "results",
     "why did the agent reject the proposal": "agent_reject", "what is p95": "glossary",
     "what is a router": "glossary", "what is an expert": "glossary", "pizza recipe": "unknown",
-    "can I see an animation of the gpus": "visual", "show me a visual simulation of the experts": "visual",
+    "can I see an animation of the gpus": "visual", "can i try my own prompt": "my_prompt", "can I write a prompt and test it": "my_prompt", "show me a visual simulation of the experts": "visual",
 }
 
 

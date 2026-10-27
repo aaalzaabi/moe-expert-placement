@@ -9,7 +9,7 @@ from streamlit.testing.v1 import AppTest
 
 logging.getLogger("streamlit").setLevel(logging.ERROR)
 APP = str(ROOT / "dashboard" / "app.py")
-PAGES = ["start", "glossary", "assistant_chat", "overview", "demo", "model", "routing", "placement", "gpu_sim", "inference", "migration", "evaluation", "network",
+PAGES = ["start", "my_prompt", "glossary", "assistant_chat", "overview", "demo", "model", "routing", "placement", "gpu_sim", "inference", "migration", "evaluation", "network",
          "findings", "provenance", "multisite"]
 
 
@@ -143,6 +143,35 @@ class TestViewModes(unittest.TestCase):
         at.toggle(key="detailed").set_value(True).run()
         self.assertFalse(at.exception)
         self.assertFalse(any(e.label.startswith("More detail") for e in at.expander))
+
+
+class TestMyPrompt(unittest.TestCase):
+    """The prompt page never loads the model by itself, and renders results from a routing table (no torch needed)."""
+
+    def test_page_idle_does_not_load_model(self):
+        at = open_page("my_prompt")
+        self.assertFalse(at.exception)
+        self.assertNotIn("torch", sys.modules)
+        self.assertNotIn("mp_result", at.session_state)
+
+    def test_results_render_from_a_routing_table(self):
+        import numpy as np
+        import pandas as pd
+        sys.path.insert(0, str(ROOT / "dashboard"))
+        import live_model as LM
+        r = pd.read_csv(ROOT / "outputs" / "workload_routing.csv")
+        r = r[r.request_id == 1].assign(request_id=LM.PROMPT_ID, category="your prompt")
+        n = int(r.input_tokens.iloc[0])
+        choices = np.zeros((16, n, 8), dtype=int)
+        fake = LM.Routed("How does GPU parallelism work?", [f"t{i}" for i in range(n)], r, choices, 0.5, "mps",
+                         "bfloat16")
+        at = AppTest.from_file(APP, default_timeout=120).run()
+        at.session_state["mp_result"] = fake
+        at.switch_page("app_pages/my_prompt.py").run()
+        self.assertFalse(at.exception, [str(e.value)[:400] for e in at.exception])
+        labels = [m.label for m in at.metric]
+        self.assertIn("Demand-aware · total time", labels)
+        self.assertNotIn("torch", sys.modules)
 
 
 if __name__ == "__main__":

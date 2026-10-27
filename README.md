@@ -14,7 +14,7 @@ inference, built on **real routing measurements** from `allenai/OLMoE-1B-7B-0125
 ```bash
 cd ~/Desktop/MOE/moe-expert-placement
 
-# Dashboard (never loads the model)
+# Dashboard (loads the model only if you press 'Run on the real model' on 'Try your own prompt')
 .venv/bin/streamlit run dashboard/app.py
 
 # Test suite (stdlib unittest; ~5 s)
@@ -48,7 +48,7 @@ dashboard/legacy_app.py  original single-page dashboard (deprecations fixed)
 outputs/               ORIGINAL results (read-only by convention; scripts refuse to overwrite without --force)
 outputs/runs/          new simulation runs, one folder per run id with metadata.json
 outputs/measurements/  new real profiling runs (created by profile_routing.py)
-tests/                 173 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
+tests/                 175 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
                        multi-site planner, forecasting/regret, agent, scalability, Multi-site page
 docs/                  audit, architecture, methodology, assumptions, demo guide, GPU validation plan
 models/                OLMoE checkpoint (not modified)
@@ -107,7 +107,7 @@ Multi-site, forecasting & agent** has a use-case selector and six tabs:
 | Governance & safety | compliance per use case, residency, approval rules, risk register, audit trail, blocked reasons | — |
 
 Default views read saved runs (`outputs/runs/usecases-*`, `scalability-*`); computations run only when a button is
-pressed, in memory. The dashboard never loads OLMoE and never writes files (both tested). Demo script:
+pressed, in memory. The dashboard never writes files, and it loads OLMoE only when a user presses **Run on the real model** on **Try your own prompt** (BF16 on the Mac's GPU, about 15 GB peak; first prompt ≈ 4 s, then ≈ 0.3 s; *Unload the model* frees it). Every other page, and the whole test suite, runs without torch (tested). Demo script:
 `docs/DEMO_GUIDE.md`.
 
 ## Version control and CI
@@ -118,7 +118,7 @@ pressed, in memory. The dashboard never loads OLMoE and never writes files (both
 * `.github/workflows/ci.yml` runs on every push and pull request: Python 3.11, installs `requirements-ci.txt`
   (streamlit, plotly, pandas, numpy; no torch, no model download), then runs the full unittest suite and the
   reproduction tests.
-* Status: these exact steps pass locally in a clean clone with a fresh virtual environment (173 tests). The workflow
+* Status: these exact steps pass locally in a clean clone with a fresh virtual environment (175 tests). The workflow
   has **not** run on GitHub yet: no remote is configured. To enable it:
 
 ```bash

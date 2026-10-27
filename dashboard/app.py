@@ -3,7 +3,8 @@
 Run from the project root:
     .venv/bin/streamlit run dashboard/app.py
 
-The dashboard never loads the OLMoE checkpoint. It reads saved measurements and
+The dashboard loads the OLMoE checkpoint only on 'Try your own prompt', when the user presses its button
+(dashboard/live_model.py). Every other page reads saved measurements and
 runs lightweight, cached simulations. The original single-page dashboard is kept
 as dashboard/legacy_app.py.
 """
@@ -25,6 +26,7 @@ pages = {
     "": [
         st.Page("app_pages/start.py", title="Start here", icon=":material/home:", default=True),
         st.Page("app_pages/demo.py", title="Presentation mode", icon=":material/slideshow:"),
+        st.Page("app_pages/my_prompt.py", title="Try your own prompt", icon=":material/edit_note:"),
         st.Page("app_pages/assistant_chat.py", title="Ask the assistant", icon=":material/support_agent:"),
     ],
     "Part 1 · Real data": [
@@ -77,7 +79,7 @@ with st.sidebar:
             for kind in ("measured", "checkpoint", "derived", "simulated", "live"):
                 ui.badge(kind)
             st.caption("Green = real. Orange / violet = simulation with assumed hardware. "
-                       "This dashboard never loads the model or touches real GPUs.")
+                       "Only 'Try your own prompt' runs the real model, when you press its button. No page touches real GPUs.")
         with st.expander("Current simulation settings", icon=":material/tune:"):
             cfg = ui.scenario()
             st.caption(ui.scenario_summary(cfg))
