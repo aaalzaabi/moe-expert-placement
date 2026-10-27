@@ -15,6 +15,7 @@ dashboard/app.py                          one 220-line page (Phase 1 – 4A only
 ```
 
 There was no git repository, no tests, no shared configuration, no README and no requirements file.
+(As found on 2026-10-22. A local git repository and a CI workflow were added on 2026-10-27; see section 7.)
 
 ### Data flow (verified)
 
@@ -107,7 +108,9 @@ deprecated parameters. All are addressed by the new dashboard (see `docs/ARCHITE
 | High | Protect original results from overwrite | Done |
 | High | Centralised config + presets reproducing saved runs | Done |
 | High | Reproducible runner with run ids, metadata and sweeps | Done (`scripts/run_experiment.py`) |
-| High | Tests for reproduction, invariants, leakage, schemas, dashboard | Done (90) |
+| High | Tests for reproduction, invariants, leakage, schemas, dashboard | Done (165) |
+| High | Version control | Done: local git repository (branch `main`). Weights, tokenizer and `.venv` excluded by `.gitignore`. **No remote configured, nothing pushed.** |
+| High | Continuous integration | Workflow written (`.github/workflows/ci.yml`: Python 3.11, `requirements-ci.txt`, full unittest suite). Verified by running the same steps locally in a clean clone with a fresh venv and no weights (165 tests OK). **Not yet run on GitHub Actions**, which needs a GitHub remote. |
 | High | More real prompts (≥ 100), decode routing | Tooling done (`profile_routing.py`); **not run** (expensive, explicit action) |
 | High | Replicates with seeded Poisson arrivals + confidence intervals | Tooling done; results not yet produced |
 | Medium | Robust controller forecast (more requests, rolling window, expected-cost) | Open |

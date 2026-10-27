@@ -48,7 +48,7 @@ dashboard/legacy_app.py  original single-page dashboard (deprecations fixed)
 outputs/               ORIGINAL results (read-only by convention; scripts refuse to overwrite without --force)
 outputs/runs/          new simulation runs, one folder per run id with metadata.json
 outputs/measurements/  new real profiling runs (created by profile_routing.py)
-tests/                 150 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
+tests/                 165 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
                        multi-site planner, forecasting/regret, agent, scalability, Multi-site page
 docs/                  audit, architecture, methodology, assumptions, demo guide, GPU validation plan
 models/                OLMoE checkpoint (not modified)
@@ -109,6 +109,22 @@ Multi-site, forecasting & agent** has a use-case selector and six tabs:
 Default views read saved runs (`outputs/runs/usecases-*`, `scalability-*`); computations run only when a button is
 pressed, in memory. The dashboard never loads OLMoE and never writes files (both tested). Demo script:
 `docs/DEMO_GUIDE.md`.
+
+## Version control and CI
+
+* Git repository on branch `main`. `.gitignore` excludes the 13 GB weights, tokenizer, `.venv`, caches and
+  resume files; only `config.json` and `model.safetensors.index.json` from the checkpoint are tracked, because tests
+  and the dashboard read them.
+* `.github/workflows/ci.yml` runs on every push and pull request: Python 3.11, installs `requirements-ci.txt`
+  (streamlit, plotly, pandas, numpy; no torch, no model download), then runs the full unittest suite and the
+  reproduction tests.
+* Status: these exact steps pass locally in a clean clone with a fresh virtual environment (165 tests). The workflow
+  has **not** run on GitHub yet: no remote is configured. To enable it:
+
+```bash
+git remote add origin https://github.com/<you>/moe-expert-placement.git
+git push -u origin main      # CI then runs under the repository's Actions tab
+```
 
 ## Documentation
 
