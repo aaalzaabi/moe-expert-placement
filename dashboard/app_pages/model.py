@@ -35,8 +35,7 @@ with st.container(horizontal=True):
     st.metric("Non-expert weights", f"{(ckpt_total - expert_total) / C.GB:.3f} GB", border=True,
               help="Attention, router, embeddings, norms, LM head — replicated on every GPU in the simulator's mental model")
 
-left, right = st.columns([3, 2])
-with left:
+with st.container():
     with st.container(border=True):
         ui.section("Architecture", "checkpoint", "One OLMoE decoder layer: attention, then a router choosing 8 of 64 "
                    "expert MLPs per token. Repeated 16 times.")
@@ -51,7 +50,7 @@ flowchart LR
   E8 --> S
   S --> N["next layer L+1"]
 """, alt="One MoE layer: attention, router, top-8 of 64 experts, weighted sum")
-with right:
+with ui.more("configuration, expert inspector, memory"):
     with st.container(border=True):
         ui.section("Model configuration", "checkpoint", source=None)
         keys = ["architectures", "model_type", "num_hidden_layers", "num_experts", "num_experts_per_tok",
@@ -60,57 +59,57 @@ with right:
         ui.table(pd.DataFrame({"field": keys, "value": [str(mc.get(k)) for k in keys]}), "OLMoE config.json fields",
                  height=320)
 
-# ---------------------------------------------------------------- expert inspector
-st.subheader("Layer-specific expert inspector")
-st.caption("An expert's identity is the pair (layer_id, expert_id). There are 1,024 distinct experts.")
-c1, c2 = st.columns([1, 3])
-with c1:
-    layer = st.selectbox("Layer", range(C.NUM_LAYERS), key="mx_layer")
-    expert = st.number_input("Expert", min_value=0, max_value=C.EXPERTS_PER_LAYER - 1, value=0, step=1, key="mx_expert")
-    st.markdown(f"### Expert `({layer}, {expert})`")
-    st.caption(f"Global slot index {layer * C.EXPERTS_PER_LAYER + expert} of 1024")
+    # ---------------------------------------------------------------- expert inspector
+    st.subheader("Layer-specific expert inspector")
+    st.caption("An expert's identity is the pair (layer_id, expert_id). There are 1,024 distinct experts.")
+    c1, c2 = st.columns([1, 3])
+    with c1:
+        layer = st.selectbox("Layer", range(C.NUM_LAYERS), key="mx_layer")
+        expert = st.number_input("Expert", min_value=0, max_value=C.EXPERTS_PER_LAYER - 1, value=0, step=1, key="mx_expert")
+        st.markdown(f"### Expert `({layer}, {expert})`")
+        st.caption(f"Global slot index {layer * C.EXPERTS_PER_LAYER + expert} of 1024")
 
-routing = ui.routing()
-with c2:
-    t = tensors[(tensors.layer_id == layer) & (tensors.expert_id == expert)]
+    routing = ui.routing()
+    with c2:
+        t = tensors[(tensors.layer_id == layer) & (tensors.expert_id == expert)]
+        with st.container(border=True):
+            ui.section("Weight tensors", "checkpoint", source="phase4f/memory/expert_tensor_metadata.csv")
+            ui.table(t[["tensor_name", "shape", "dtype", "size_mb"]], f"Tensors of expert ({layer}, {expert})")
+            st.caption(f"Total {t.bytes.sum() / C.MB:.3f} MB in BF16. The profiling scripts load the model in FP32, "
+                       f"which would occupy {2 * t.bytes.sum() / C.MB:.3f} MB in memory.")
+
+        pl = ui.csv("heterogeneous_placements.csv")
+        here = pl[(pl.layer_id == layer) & (pl.expert_id == expert)].set_index("strategy")
+        req = routing[(routing.layer_id == layer) & (routing.expert_id == expert)]
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Measured assignments (6 prompts)", int(req.token_assignments.sum()), border=True)
+        m2.metric("Rank within layer", int(routing[routing.layer_id == layer].groupby("expert_id").token_assignments.sum()
+                                             .rank(ascending=False, method="min").loc[expert]), border=True)
+        m3.metric("Simulated GPU (static → demand-aware)",
+                  f"{here.loc['static', 'gpu_id']} → {here.loc['demand_aware', 'gpu_id']}", border=True,
+                  help="From the saved Phase 3B placement. A simulated assignment only.")
+
     with st.container(border=True):
-        ui.section("Weight tensors", "checkpoint", source="phase4f/memory/expert_tensor_metadata.csv")
-        ui.table(t[["tensor_name", "shape", "dtype", "size_mb"]], f"Tensors of expert ({layer}, {expert})")
-        st.caption(f"Total {t.bytes.sum() / C.MB:.3f} MB in BF16. The profiling scripts load the model in FP32, "
-                   f"which would occupy {2 * t.bytes.sum() / C.MB:.3f} MB in memory.")
+        ui.section(f"Routing to expert ({layer}, {expert}) by request", "measured", source="workload_routing.csv")
+        fig = go.Figure(go.Bar(x=[f"req {r} · {c}" for r, c in zip(req.request_id, req.category)], y=req.token_assignments,
+                               marker_color=[ui.CATEGORY_COLORS.get(c, ui.SLATE) for c in req.category]))
+        fig.update_layout(yaxis_title="Token assignments", showlegend=False)
+        ui.chart(fig, f"Token assignments to expert ({layer},{expert}) per request", height=260)
 
-    pl = ui.csv("heterogeneous_placements.csv")
-    here = pl[(pl.layer_id == layer) & (pl.expert_id == expert)].set_index("strategy")
-    req = routing[(routing.layer_id == layer) & (routing.expert_id == expert)]
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Measured assignments (6 prompts)", int(req.token_assignments.sum()), border=True)
-    m2.metric("Rank within layer", int(routing[routing.layer_id == layer].groupby("expert_id").token_assignments.sum()
-                                         .rank(ascending=False, method="min").loc[expert]), border=True)
-    m3.metric("Simulated GPU (static → demand-aware)",
-              f"{here.loc['static', 'gpu_id']} → {here.loc['demand_aware', 'gpu_id']}", border=True,
-              help="From the saved Phase 3B placement. A simulated assignment only.")
-
-with st.container(border=True):
-    ui.section(f"Routing to expert ({layer}, {expert}) by request", "measured", source="workload_routing.csv")
-    fig = go.Figure(go.Bar(x=[f"req {r} · {c}" for r, c in zip(req.request_id, req.category)], y=req.token_assignments,
-                           marker_color=[ui.CATEGORY_COLORS.get(c, ui.SLATE) for c in req.category]))
-    fig.update_layout(yaxis_title="Token assignments", showlegend=False)
-    ui.chart(fig, f"Token assignments to expert ({layer},{expert}) per request", height=260)
-
-# ---------------------------------------------------------------- memory
-c1, c2 = st.columns(2)
-with c1:
-    with st.container(border=True):
-        ui.section("Checkpoint memory composition", "checkpoint")
-        fig = go.Figure(go.Pie(labels=["Expert MLPs (1,024)", "Everything else"],
-                               values=[expert_total, ckpt_total - expert_total], hole=0.6,
-                               marker=dict(colors=[ui.TEAL, ui.SLATE])))
-        ui.chart(fig, "Expert weights are about 93 percent of checkpoint bytes", height=280)
-with c2:
-    with st.container(border=True):
-        ui.section("Checkpoint files", "checkpoint")
-        files = ui.checkpoint_files()
-        ui.table(files.round(3), "Files in the local OLMoE checkpoint folder", height=280)
+    # ---------------------------------------------------------------- memory
+    c1, c2 = st.columns(2)
+    with c1:
+        with st.container(border=True):
+            ui.section("Checkpoint memory composition", "checkpoint")
+            fig = go.Figure(go.Pie(labels=["Expert MLPs (1,024)", "Everything else"],
+                                   values=[expert_total, ckpt_total - expert_total], hole=0.6,
+                                   marker=dict(colors=[ui.TEAL, ui.SLATE])))
+            ui.chart(fig, "Expert weights are about 93 percent of checkpoint bytes", height=280)
+    with c2:
+        with st.container(border=True):
+            ui.section("Checkpoint files", "checkpoint")
+            files = ui.checkpoint_files()
+            ui.table(files.round(3), "Files in the local OLMoE checkpoint folder", height=280)
 
 st.info("This page describes the real model. The dashboard does not move, load or manage experts on GPUs; GPU "
         "assignments shown elsewhere are simulation plans.", icon=":material/info:")

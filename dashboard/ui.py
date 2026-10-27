@@ -120,8 +120,29 @@ def page_header(title: str, subtitle: str, kinds: tuple[str, ...] = (), step: st
                 badge(k)
 
 
+def detailed() -> bool:
+    """True when the sidebar 'Show all details' switch is on (default: simple view)."""
+    return bool(st.session_state.get("detailed", False))
+
+
+def more(label: str):
+    """Secondary content: shown inline in the detailed view, folded into a 'More detail' expander in the simple view."""
+    if detailed():
+        return st.container()
+    return st.expander(f"More detail: {label}", icon=":material/unfold_more:")
+
+
 def explain(what: str, read: list[str], takeaway: str, expanded: bool = True):
-    """Plain-language 'About this page' box shown at the top of every page."""
+    """Plain-language 'About this page' box shown at the top of every page.
+
+    Simple view: only the key takeaway, with the explanation folded away. Detailed view: the full box.
+    """
+    if not detailed():
+        st.success(takeaway, title="Key takeaway", icon=":material/lightbulb:")
+        with st.expander("How to read this page", icon=":material/help:"):
+            st.markdown(what)
+            st.markdown("\n".join(f"- {line}" for line in read))
+        return
     with st.expander("About this page — read me first", icon=":material/help:", expanded=expanded):
         c1, c2 = st.columns([1, 1])
         with c1:

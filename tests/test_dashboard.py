@@ -123,5 +123,27 @@ class TestExplanationsAndAssistant(unittest.TestCase):
         self.assertFalse(at.exception, [e.value for e in at.exception])
 
 
+
+
+class TestViewModes(unittest.TestCase):
+    """Simple view (default) folds secondary detail away; 'Show all details' shows everything."""
+
+    def test_every_page_renders_in_detailed_view(self):
+        for page in PAGES:
+            with self.subTest(page=page):
+                at = AppTest.from_file(APP, default_timeout=120)
+                at.session_state["detailed"] = True
+                at.run().switch_page(f"app_pages/{page}.py").run()
+                self.assertFalse(at.exception, [str(e.value)[:400] for e in at.exception])
+
+    def test_simple_view_folds_detail_and_toggle_unfolds(self):
+        at = open_page("placement")
+        self.assertFalse(at.session_state.detailed)
+        self.assertTrue(any(e.label.startswith("More detail") for e in at.expander))
+        at.toggle(key="detailed").set_value(True).run()
+        self.assertFalse(at.exception)
+        self.assertFalse(any(e.label.startswith("More detail") for e in at.expander))
+
+
 if __name__ == "__main__":
     unittest.main()

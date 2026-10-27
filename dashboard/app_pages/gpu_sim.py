@@ -93,34 +93,35 @@ with st.container(border=True):
         st.metric("Perfect balance", f"{ideal:,.0f}", border=True,
                   help="Every GPU busy for exactly the same time. No placement can do better.")
 
-    st.markdown("##### Look at one decision")
-    st.caption("Pick a step to see the numbers the rule compared and why the expert went where it did.")
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        step = st.number_input("Step (1 = first expert placed)", 1, len(trace), 1, key=f"gs_step_{strategy}")
-        st.markdown(V.RULE[strategy].format(n=cfg.num_gpus))
-    row, dt = V.decision_table(trace, int(step), cfg)
-    with c2:
-        if strategy == "static":
-            i = int(row.layer_id) * C.EXPERTS_PER_LAYER + int(row.expert_id)
-            why = (f"It is expert number {i}, and {i} mod {cfg.num_gpus} = {i % cfg.num_gpus}, so it goes to "
-                   f"**GPU {row.gpu_id}**" + ("" if row.gpu_id == i % cfg.num_gpus else " (the next GPU with a free slot)")
-                   + ". Its demand is not looked at.")
-        elif strategy == "balanced":
-            why = (f"GPU {row.gpu_id} had the **least work so far** "
-                   f"({dt.loc[row.gpu_id, 'work already there']:g}), so it gets this expert.")
-        else:
-            why = (f"Adding this expert to GPU {row.gpu_id} gives a busy time of "
-                   f"**{dt.loc[row.gpu_id, 'busy time if placed here']:,.1f}** — the smallest of all GPUs.")
-        st.markdown(f"**Step {int(step)}:** layer {row.layer_id}, expert {row.expert_id} "
-                    f"(demand **{row.train_demand:g}**). {why}")
-        ui.table(dt, f"Numbers compared at placement step {int(step)}", column_config={
-            "speed": st.column_config.NumberColumn(format="%.2f×"),
-            "work already there": st.column_config.NumberColumn(format="%.0f"),
-            "busy time now": st.column_config.NumberColumn(format="%.1f"),
-            "busy time if placed here": st.column_config.NumberColumn(format="%.1f",
-                                                                      help="Empty = GPU is full (no free slot)"),
-            "chosen": st.column_config.CheckboxColumn("chosen")})
+    with ui.more("look at one placement decision"):
+        st.markdown("##### Look at one decision")
+        st.caption("Pick a step to see the numbers the rule compared and why the expert went where it did.")
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            step = st.number_input("Step (1 = first expert placed)", 1, len(trace), 1, key=f"gs_step_{strategy}")
+            st.markdown(V.RULE[strategy].format(n=cfg.num_gpus))
+        row, dt = V.decision_table(trace, int(step), cfg)
+        with c2:
+            if strategy == "static":
+                i = int(row.layer_id) * C.EXPERTS_PER_LAYER + int(row.expert_id)
+                why = (f"It is expert number {i}, and {i} mod {cfg.num_gpus} = {i % cfg.num_gpus}, so it goes to "
+                       f"**GPU {row.gpu_id}**" + ("" if row.gpu_id == i % cfg.num_gpus else " (the next GPU with a free slot)")
+                       + ". Its demand is not looked at.")
+            elif strategy == "balanced":
+                why = (f"GPU {row.gpu_id} had the **least work so far** "
+                       f"({dt.loc[row.gpu_id, 'work already there']:g}), so it gets this expert.")
+            else:
+                why = (f"Adding this expert to GPU {row.gpu_id} gives a busy time of "
+                       f"**{dt.loc[row.gpu_id, 'busy time if placed here']:,.1f}** — the smallest of all GPUs.")
+            st.markdown(f"**Step {int(step)}:** layer {row.layer_id}, expert {row.expert_id} "
+                        f"(demand **{row.train_demand:g}**). {why}")
+            ui.table(dt, f"Numbers compared at placement step {int(step)}", column_config={
+                "speed": st.column_config.NumberColumn(format="%.2f×"),
+                "work already there": st.column_config.NumberColumn(format="%.0f"),
+                "busy time now": st.column_config.NumberColumn(format="%.1f"),
+                "busy time if placed here": st.column_config.NumberColumn(format="%.1f",
+                                                                          help="Empty = GPU is full (no free slot)"),
+                "chosen": st.column_config.CheckboxColumn("chosen")})
 
 # ---------------------------------------------------------------- 2. a question
 r = ui.routing()
@@ -152,14 +153,15 @@ with st.container(border=True):
                       delta_color="inverse", border=True,
                       help=f"Sum over 16 layers of the slowest GPU's work ÷ speed. GPUs spend "
                            f"{m['waiting_pct']:.0f}% of the time waiting for the slowest one.")
-    st.markdown("**Time per layer for each placement** (lower = faster). The thick line is the method selected above.")
-    fig = go.Figure()
-    for s, m in summ.items():
-        fig.add_scatter(x=np.arange(1, C.NUM_LAYERS + 1), y=m["layer_time"], mode="lines+markers",
-                        name=ui.STRATEGY_LABEL[s], line=dict(color=ui.STRATEGY_COLORS[s], width=3 if s == strategy else 1.5))
-    fig.update_layout(xaxis_title="Layer", yaxis_title="Slowest GPU's work (÷ speed)")
-    fig.update_xaxes(dtick=1)
-    ui.chart(fig, f"Per-layer time of question {rid} for three placements", height=320)
+    with ui.more("time per layer for each placement"):
+        st.markdown("**Time per layer for each placement** (lower = faster). The thick line is the method selected above.")
+        fig = go.Figure()
+        for s, m in summ.items():
+            fig.add_scatter(x=np.arange(1, C.NUM_LAYERS + 1), y=m["layer_time"], mode="lines+markers",
+                            name=ui.STRATEGY_LABEL[s], line=dict(color=ui.STRATEGY_COLORS[s], width=3 if s == strategy else 1.5))
+        fig.update_layout(xaxis_title="Layer", yaxis_title="Slowest GPU's work (÷ speed)")
+        fig.update_xaxes(dtick=1)
+        ui.chart(fig, f"Per-layer time of question {rid} for three placements", height=320)
 
     m, best = summ[strategy], min(summ, key=lambda s: summ[s]["total"])
     waits = ", ".join(f"GPU {g}: {n} layers" for g, n in m["bottleneck_counts"].items() if n)

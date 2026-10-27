@@ -71,27 +71,28 @@ with st.container(horizontal=True):
     st.metric("Busiest link", f"{worst} copies", border=True,
               help=f"≈ {worst * C.transfer_ms(cfg.expert_bytes, cfg.bandwidth_gb_per_s, cfg.link_latency_ms):.1f} ms of serial copying")
 
-c1, c2 = st.columns(2)
-with c1:
-    with st.container(border=True):
-        ui.section("Load per GPU: current vs proposed", "live")
-        fig = go.Figure()
-        for s_name in (cfg.source_strategy, cfg.target_strategy):
-            m = P.gpu_metrics(placements, s_name, "train_demand", cfg)
-            fig.add_bar(name=f"{'current' if s_name == cfg.source_strategy else 'proposed'} · {ui.STRATEGY_LABEL[s_name]}",
-                        x=[f"GPU {g}" for g in m.gpu_id], y=m.normalized_load, marker_color=ui.STRATEGY_COLORS[s_name])
-        fig.update_layout(barmode="group", yaxis_title="Train load proxy (assignments / speed)")
-        ui.chart(fig, "Load proxy per GPU, current versus proposed", height=300)
-with c2:
-    with st.container(border=True):
-        ui.section("Copies per link (source → destination GPU)", "live")
-        mat = (moved.groupby(["src_gpu", "dst_gpu"]).size().unstack(fill_value=0)
-               .reindex(index=range(cfg.num_gpus), columns=range(cfg.num_gpus), fill_value=0))
-        fig = go.Figure(go.Heatmap(z=mat.values, x=[f"→ GPU {g}" for g in mat.columns], y=[f"GPU {g} →" for g in mat.index],
-                                   colorscale=ui.HEAT, text=mat.values, texttemplate="%{text}",
-                                   hovertemplate="%{y} %{x}: %{z} experts<extra></extra>"))
-        fig.update_yaxes(autorange="reversed")
-        ui.chart(fig, "Number of expert copies on each directed link", height=300)
+with ui.more("load per GPU and copies per link"):
+    c1, c2 = st.columns(2)
+    with c1:
+        with st.container(border=True):
+            ui.section("Load per GPU: current vs proposed", "live")
+            fig = go.Figure()
+            for s_name in (cfg.source_strategy, cfg.target_strategy):
+                m = P.gpu_metrics(placements, s_name, "train_demand", cfg)
+                fig.add_bar(name=f"{'current' if s_name == cfg.source_strategy else 'proposed'} · {ui.STRATEGY_LABEL[s_name]}",
+                            x=[f"GPU {g}" for g in m.gpu_id], y=m.normalized_load, marker_color=ui.STRATEGY_COLORS[s_name])
+            fig.update_layout(barmode="group", yaxis_title="Train load proxy (assignments / speed)")
+            ui.chart(fig, "Load proxy per GPU, current versus proposed", height=300)
+    with c2:
+        with st.container(border=True):
+            ui.section("Copies per link (source → destination GPU)", "live")
+            mat = (moved.groupby(["src_gpu", "dst_gpu"]).size().unstack(fill_value=0)
+                   .reindex(index=range(cfg.num_gpus), columns=range(cfg.num_gpus), fill_value=0))
+            fig = go.Figure(go.Heatmap(z=mat.values, x=[f"→ GPU {g}" for g in mat.columns], y=[f"GPU {g} →" for g in mat.index],
+                                       colorscale=ui.HEAT, text=mat.values, texttemplate="%{text}",
+                                       hovertemplate="%{y} %{x}: %{z} experts<extra></extra>"))
+            fig.update_yaxes(autorange="reversed")
+            ui.chart(fig, "Number of expert copies on each directed link", height=300)
 
 # ---------------------------------------------------------------- controller decision
 st.subheader("Cost-aware controller")
@@ -134,125 +135,127 @@ right = moving_helped == decision.approve
        "misleading. This is a known limitation (small sample)."),
     icon=":material/fact_check:")
 
-# ---------------------------------------------------------------- sandbox
-st.subheader("Migration decision sandbox")
-st.caption(":material/science: Simulation only — no GPU is touched, no transfer runs and no file is written. "
-           "Actions here change this browser session only.")
+with ui.more("try it yourself — decision sandbox and policy comparison"):
+    # ---------------------------------------------------------------- sandbox
+    st.subheader("Migration decision sandbox")
+    st.caption(":material/science: Simulation only — no GPU is touched, no transfer runs and no file is written. "
+               "Actions here change this browser session only.")
 
-if "mig_sm" not in st.session_state or st.session_state.get("mig_cfg") != key:
-    st.session_state.mig_sm = POL.MigrationStateMachine()
-    st.session_state.mig_log = [(datetime.now().strftime("%H:%M:%S"), "proposed", "static → demand-aware proposed")]
-    st.session_state.mig_cfg = key
-    st.session_state.mig_override = None
-sm: POL.MigrationStateMachine = st.session_state.mig_sm
-
-
-def act(action: str):
-    sm_ = st.session_state.mig_sm
-    log = st.session_state.mig_log
-    now = datetime.now().strftime("%H:%M:%S")
-    if action == "reset":
+    if "mig_sm" not in st.session_state or st.session_state.get("mig_cfg") != key:
         st.session_state.mig_sm = POL.MigrationStateMachine()
-        log.append((now, "proposed", "new proposal"))
-        return
-    approve = decision.approve if action == "controller" else action == "approve"
-    who = "controller" if action == "controller" else "operator override" if approve != decision.approve else "operator"
-    if not approve:
-        sm_.to("rejected", who)
-        reason = explanation.headline if who == "controller" else "operator chose not to move (controller said " + \
-            decision.decision.upper() + ")"
-        log.append((now, "rejected", f"rejected by {who} — {reason}"))
-        return
-    sm_.to("approved", who)
-    log.append((now, "approved", f"approved by {who}"))
-    res = ui.simulate(key, tuple(cfg.test_ids), True)
-    for s_ in res.states:
-        if s_["state"] in ("transferring", "active", "failed") and s_["state"] in POL.TRANSITIONS[sm_.state]:
-            sm_.to(s_["state"])
-            log.append((now, s_["state"], f"t = {s_['t_ms']:.1f} ms · {s_['note']}"))
+        st.session_state.mig_log = [(datetime.now().strftime("%H:%M:%S"), "proposed", "static → demand-aware proposed")]
+        st.session_state.mig_cfg = key
+        st.session_state.mig_override = None
+    sm: POL.MigrationStateMachine = st.session_state.mig_sm
 
 
-b1, b2, b3, b4 = st.columns(4)
-proposed = sm.state == "proposed"
-b1.button("Follow controller", icon=":material/verified:", on_click=act, args=("controller",), disabled=not proposed,
-          width="stretch", type="primary")
-b2.button("Approve (override)" if not decision.approve else "Approve", icon=":material/check_circle:", on_click=act,
-          args=("approve",), disabled=not proposed, width="stretch")
-b3.button("Reject", icon=":material/cancel:", on_click=act, args=("reject",), disabled=not proposed, width="stretch")
-b4.button("New proposal", icon=":material/restart_alt:", on_click=act, args=("reset",), disabled=proposed,
-          width="stretch")
+    def act(action: str):
+        sm_ = st.session_state.mig_sm
+        log = st.session_state.mig_log
+        now = datetime.now().strftime("%H:%M:%S")
+        if action == "reset":
+            st.session_state.mig_sm = POL.MigrationStateMachine()
+            log.append((now, "proposed", "new proposal"))
+            return
+        approve = decision.approve if action == "controller" else action == "approve"
+        who = "controller" if action == "controller" else "operator override" if approve != decision.approve else "operator"
+        if not approve:
+            sm_.to("rejected", who)
+            reason = explanation.headline if who == "controller" else "operator chose not to move (controller said " + \
+                decision.decision.upper() + ")"
+            log.append((now, "rejected", f"rejected by {who} — {reason}"))
+            return
+        sm_.to("approved", who)
+        log.append((now, "approved", f"approved by {who}"))
+        res = ui.simulate(key, tuple(cfg.test_ids), True)
+        for s_ in res.states:
+            if s_["state"] in ("transferring", "active", "failed") and s_["state"] in POL.TRANSITIONS[sm_.state]:
+                sm_.to(s_["state"])
+                log.append((now, s_["state"], f"t = {s_['t_ms']:.1f} ms · {s_['note']}"))
 
-s1, s2 = st.columns([3, 2])
-with s1:
+
+    b1, b2, b3, b4 = st.columns(4)
+    proposed = sm.state == "proposed"
+    b1.button("Follow controller", icon=":material/verified:", on_click=act, args=("controller",), disabled=not proposed,
+              width="stretch", type="primary")
+    b2.button("Approve (override)" if not decision.approve else "Approve", icon=":material/check_circle:", on_click=act,
+              args=("approve",), disabled=not proposed, width="stretch")
+    b3.button("Reject", icon=":material/cancel:", on_click=act, args=("reject",), disabled=not proposed, width="stretch")
+    b4.button("New proposal", icon=":material/restart_alt:", on_click=act, args=("reset",), disabled=proposed,
+              width="stretch")
+
+    s1, s2 = st.columns([3, 2])
+    with s1:
+        with st.container(border=True):
+            cur = sm.state
+            lines = ["stateDiagram-v2", "  direction LR", "  [*] --> Proposed", "  Proposed --> Approved",
+                     "  Proposed --> Rejected", "  Approved --> Transferring", "  Approved --> Failed: staging memory",
+                     "  Transferring --> Active: all copies landed", "  Transferring --> Failed: copy error / rollback",
+                     "  Active --> [*]", "  Rejected --> [*]", "  Failed --> [*]",
+                     f"  classDef current fill:#0f766e,stroke:#5eead4,color:#ffffff,font-weight:bold",
+                     f"  class {cur.capitalize()} current"]
+            st.mermaid_chart("\n".join(lines), alt=f"Migration state machine; current state {cur}")
+            st.markdown(f"Current state: **{cur.upper()}**")
+    with s2:
+        with st.container(border=True, height=330):
+            st.markdown("**Session event log**")
+            for t, s_, note in reversed(st.session_state.mig_log):
+                st.markdown(f"`{t}` **{s_}** — {note}")
+
+    # ---------------------------------------------------------------- outcome
+    if sm.state in ("active", "failed", "transferring"):
+        res = ui.simulate(key, tuple(cfg.test_ids), True)
+        base = ui.simulate(key, tuple(cfg.test_ids), False)
+        mig = res.migrations
+        st.subheader("Simulated execution on held-out requests")
+        with st.container(horizontal=True):
+            st.metric("Outcome", res.summary["migration_state"].upper(), border=True)
+            act_ms = res.summary["migration_activation_ms"]
+            st.metric("Activation at", f"{act_ms:.1f} ms" if act_ms is not None else "—", border=True)
+            st.metric("p95 latency", f"{res.summary['p95_latency_ms']:.1f} ms",
+                      f"{-ui.pct(res.summary['p95_latency_ms'], base.summary['p95_latency_ms']):+.1f}% vs never",
+                      delta_color="inverse", border=True)
+            st.metric("Makespan", f"{res.summary['makespan_ms']:.1f} ms",
+                      f"{-ui.pct(res.summary['makespan_ms'], base.summary['makespan_ms']):+.1f}% vs never",
+                      delta_color="inverse", border=True)
+        if res.summary["failure_reason"]:
+            st.error(f"Migration failed: {res.summary['failure_reason']}. Requests kept the static layout (rollback).",
+                     icon=":material/warning:")
+
+        c1, c2 = st.columns([3, 2])
+        with c1:
+            with st.container(border=True):
+                ui.section("Transfer playback", "live", caption="Cumulative expert-weight bytes landed over simulated time.")
+                done = np.sort(mig.finish_ms.to_numpy())
+                t_end = float(max(done.max() if len(done) else 0, res.summary["makespan_ms"]))
+                t = st.slider("Simulated time (ms)", 0.0, t_end, min(t_end, float(act_ms or t_end)), key="mg_t")
+                n_done = int((done <= t).sum())
+                state_at = [x for x in res.states if x["t_ms"] <= t][-1]["state"]
+                st.progress(n_done / max(len(mig), 1), text=f"{n_done}/{len(mig)} copies landed · state at t: **{state_at}**")
+                fig = go.Figure(go.Scatter(x=done, y=np.arange(1, len(done) + 1) * cfg.expert_bytes / C.GB, mode="lines",
+                                           line=dict(color=ui.AMBER, width=3), name="weights landed"))
+                fig.add_vline(x=t, line_color=ui.TEAL)
+                for r in res.requests.itertuples():
+                    fig.add_vrect(x0=r.arrival_ms, x1=r.finish_ms, fillcolor=ui.BLUE, opacity=0.08, line_width=0,
+                                  annotation_text=f"req {r.request_id} ({r.layout})", annotation_position="top left")
+                fig.update_layout(xaxis_title="Simulated time (ms)", yaxis_title="GB copied", showlegend=False)
+                ui.chart(fig, "Cumulative migration volume with request lifetimes", height=320)
+        with c2:
+            with st.container(border=True):
+                ui.section("Per-request latency", "live", caption="Each request keeps the layout active at its arrival.")
+                both = pd.concat([base.requests.assign(policy="never_migrate"), res.requests.assign(policy="executed")])
+                fig = go.Figure()
+                for pol_name, color in [("never_migrate", ui.SLATE), ("executed", ui.AMBER)]:
+                    d = both[both.policy == pol_name]
+                    fig.add_bar(name=pol_name.replace("_", " "), x=[f"req {r}" for r in d.request_id], y=d.latency_ms,
+                                marker_color=color, text=d.layout, textposition="inside")
+                fig.update_layout(barmode="group", yaxis_title="Simulated latency (ms)")
+                ui.chart(fig, "Latency per held-out request with and without the migration", height=320)
+
     with st.container(border=True):
-        cur = sm.state
-        lines = ["stateDiagram-v2", "  direction LR", "  [*] --> Proposed", "  Proposed --> Approved",
-                 "  Proposed --> Rejected", "  Approved --> Transferring", "  Approved --> Failed: staging memory",
-                 "  Transferring --> Active: all copies landed", "  Transferring --> Failed: copy error / rollback",
-                 "  Active --> [*]", "  Rejected --> [*]", "  Failed --> [*]",
-                 f"  classDef current fill:#0f766e,stroke:#5eead4,color:#ffffff,font-weight:bold",
-                 f"  class {cur.capitalize()} current"]
-        st.mermaid_chart("\n".join(lines), alt=f"Migration state machine; current state {cur}")
-        st.markdown(f"Current state: **{cur.upper()}**")
-with s2:
-    with st.container(border=True, height=330):
-        st.markdown("**Session event log**")
-        for t, s_, note in reversed(st.session_state.mig_log):
-            st.markdown(f"`{t}` **{s_}** — {note}")
-
-# ---------------------------------------------------------------- outcome
-if sm.state in ("active", "failed", "transferring"):
-    res = ui.simulate(key, tuple(cfg.test_ids), True)
-    base = ui.simulate(key, tuple(cfg.test_ids), False)
-    mig = res.migrations
-    st.subheader("Simulated execution on held-out requests")
-    with st.container(horizontal=True):
-        st.metric("Outcome", res.summary["migration_state"].upper(), border=True)
-        act_ms = res.summary["migration_activation_ms"]
-        st.metric("Activation at", f"{act_ms:.1f} ms" if act_ms is not None else "—", border=True)
-        st.metric("p95 latency", f"{res.summary['p95_latency_ms']:.1f} ms",
-                  f"{-ui.pct(res.summary['p95_latency_ms'], base.summary['p95_latency_ms']):+.1f}% vs never",
-                  delta_color="inverse", border=True)
-        st.metric("Makespan", f"{res.summary['makespan_ms']:.1f} ms",
-                  f"{-ui.pct(res.summary['makespan_ms'], base.summary['makespan_ms']):+.1f}% vs never",
-                  delta_color="inverse", border=True)
-    if res.summary["failure_reason"]:
-        st.error(f"Migration failed: {res.summary['failure_reason']}. Requests kept the static layout (rollback).",
-                 icon=":material/warning:")
-
-    c1, c2 = st.columns([3, 2])
-    with c1:
-        with st.container(border=True):
-            ui.section("Transfer playback", "live", caption="Cumulative expert-weight bytes landed over simulated time.")
-            done = np.sort(mig.finish_ms.to_numpy())
-            t_end = float(max(done.max() if len(done) else 0, res.summary["makespan_ms"]))
-            t = st.slider("Simulated time (ms)", 0.0, t_end, min(t_end, float(act_ms or t_end)), key="mg_t")
-            n_done = int((done <= t).sum())
-            state_at = [x for x in res.states if x["t_ms"] <= t][-1]["state"]
-            st.progress(n_done / max(len(mig), 1), text=f"{n_done}/{len(mig)} copies landed · state at t: **{state_at}**")
-            fig = go.Figure(go.Scatter(x=done, y=np.arange(1, len(done) + 1) * cfg.expert_bytes / C.GB, mode="lines",
-                                       line=dict(color=ui.AMBER, width=3), name="weights landed"))
-            fig.add_vline(x=t, line_color=ui.TEAL)
-            for r in res.requests.itertuples():
-                fig.add_vrect(x0=r.arrival_ms, x1=r.finish_ms, fillcolor=ui.BLUE, opacity=0.08, line_width=0,
-                              annotation_text=f"req {r.request_id} ({r.layout})", annotation_position="top left")
-            fig.update_layout(xaxis_title="Simulated time (ms)", yaxis_title="GB copied", showlegend=False)
-            ui.chart(fig, "Cumulative migration volume with request lifetimes", height=320)
-    with c2:
-        with st.container(border=True):
-            ui.section("Per-request latency", "live", caption="Each request keeps the layout active at its arrival.")
-            both = pd.concat([base.requests.assign(policy="never_migrate"), res.requests.assign(policy="executed")])
-            fig = go.Figure()
-            for pol_name, color in [("never_migrate", ui.SLATE), ("executed", ui.AMBER)]:
-                d = both[both.policy == pol_name]
-                fig.add_bar(name=pol_name.replace("_", " "), x=[f"req {r}" for r in d.request_id], y=d.latency_ms,
-                            marker_color=color, text=d.layout, textposition="inside")
-            fig.update_layout(barmode="group", yaxis_title="Simulated latency (ms)")
-            ui.chart(fig, "Latency per held-out request with and without the migration", height=320)
-
-with st.expander("Policy comparison on held-out requests (this scenario)", icon=":material/table:"):
-    show = policies.copy()
-    show["policy"] = show.policy.map(ui.POLICY_LABEL)
-    ui.table(show.drop(columns=["failure_reason"]).round(2), "Never, always and cost-aware migration on held-out requests")
+        ui.section("Policy comparison on held-out requests (this scenario)", "live")
+        show = policies.copy()
+        show["policy"] = show.policy.map(ui.POLICY_LABEL)
+        ui.table(show.drop(columns=["failure_reason"]).round(2), "Never, always and cost-aware migration on held-out requests")
 
 ui.step_footer("app_pages/migration.py")

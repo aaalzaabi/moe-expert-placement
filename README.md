@@ -94,7 +94,7 @@ in `moeplace/registry.py` and on the dashboard's *Data provenance* page.
 `.venv/bin/streamlit run dashboard/app.py` opens on **Start here**, a plain-language walkthrough of the project. The
 sidebar then follows the story as 8 numbered steps (real data → placement → moving experts → results), with
 **Presentation mode** for talks and an *Advanced & reference* section (multi-site, technical summary, data sources,
-glossary). **3b. Watch the GPUs at work** animates the placement rule filling the GPUs and a real question running through the 16 layers. Every page begins with an "About this page" box. **Ask the assistant** (and the *Ask a quick question* box in the sidebar) answers questions in plain words from the project's own results; it is an offline lookup assistant, not an AI model. The page **Advanced & reference →
+glossary). **3b. Watch the GPUs at work** animates the placement rule filling the GPUs and a real question running through the 16 layers. The dashboard opens in a **simple view**: each page shows its key takeaway and main chart, and extra charts and tables sit in collapsed *More detail* sections. The sidebar switch **Show all details** shows everything and lists the reference pages. **Ask the assistant** (and the *Ask a quick question* box in the sidebar) answers questions in plain words from the project's own results; it is an offline lookup assistant, not an AI model. The page **Advanced & reference →
 Multi-site, forecasting & agent** has a use-case selector and six tabs:
 
 | Tab | Shows | Interactive |

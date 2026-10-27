@@ -30,25 +30,26 @@ with st.container(border=True):
                 "on heterogeneous GPUs better than demand-agnostic baselines, and (2) decide **when** relocating experts "
                 "is worth its weight-transfer cost?")
 
-c1, c2 = st.columns(2)
-with c1:
-    with st.container(border=True, height="stretch"):
-        st.markdown("#### Baselines and approach")
-        st.markdown("""
-- **Static** — round-robin by expert index (ignores demand and speed).
-- **Load-balanced** — greedy by measured demand, ignores GPU speed.
-- **Demand-aware (proposed)** — greedy, highest demand first, onto the GPU minimising *(load + demand) ÷ speed*, under slot capacity.
-- **Migration policies** — never, always, and **cost-aware**: approve only if a training-request forecast shows makespan gain ≥ threshold and p95 regression ≤ limit, and staging memory suffices.
-""")
-with c2:
-    with st.container(border=True, height="stretch"):
-        st.markdown("#### Evaluation methodology")
-        st.markdown(f"""
-- Routing **measured** on OLMoE-1B-7B (16 × 64 experts, top-8) for {len(tim)} prompts on Apple MPS.
-- Split by request: train {{0, 2, 4}} plans placements and drives the controller; held-out {{1, 3, 5}} only evaluates.
-- Discrete-event simulator replays measured routing: per-GPU FIFO compute, FIFO links, layer barriers, placement pinned at request arrival, atomic activation after all copies.
-- Expert size calibrated from checkpoint headers: {C.CHECKPOINT_EXPERT_BYTES / C.MB:.3f} MB (BF16). GPU speeds and network are **hypothetical**.
-""")
+with ui.more("baselines and evaluation method"):
+    c1, c2 = st.columns(2)
+    with c1:
+        with st.container(border=True, height="stretch"):
+            st.markdown("#### Baselines and approach")
+            st.markdown("""
+    - **Static** — round-robin by expert index (ignores demand and speed).
+    - **Load-balanced** — greedy by measured demand, ignores GPU speed.
+    - **Demand-aware (proposed)** — greedy, highest demand first, onto the GPU minimising *(load + demand) ÷ speed*, under slot capacity.
+    - **Migration policies** — never, always, and **cost-aware**: approve only if a training-request forecast shows makespan gain ≥ threshold and p95 regression ≤ limit, and staging memory suffices.
+    """)
+    with c2:
+        with st.container(border=True, height="stretch"):
+            st.markdown("#### Evaluation methodology")
+            st.markdown(f"""
+    - Routing **measured** on OLMoE-1B-7B (16 × 64 experts, top-8) for {len(tim)} prompts on Apple MPS.
+    - Split by request: train {{0, 2, 4}} plans placements and drives the controller; held-out {{1, 3, 5}} only evaluates.
+    - Discrete-event simulator replays measured routing: per-GPU FIFO compute, FIFO links, layer barriers, placement pinned at request arrival, atomic activation after all copies.
+    - Expert size calibrated from checkpoint headers: {C.CHECKPOINT_EXPERT_BYTES / C.MB:.3f} MB (BF16). GPU speeds and network are **hypothetical**.
+    """)
 
 st.markdown("#### Current findings")
 f1, f2, f3, f4 = st.columns(4)
@@ -82,9 +83,8 @@ st.markdown(f"""
    dominated by the one request in flight during copying, and the p95 limit is 0%.
 """)
 
-c1, c2 = st.columns(2)
-with c1:
-    with st.container(border=True, height="stretch"):
+with st.container():
+    with st.container(border=True):
         st.markdown("#### Known limitations")
         st.markdown("""
 - **6 prompts, 6–10 tokens each**, prefill only (44 tokens in total); about a quarter of experts get zero assignments within each 3-prompt split, so demand estimates are noisy.
@@ -95,26 +95,27 @@ with c1:
 - **No decode phase, attention, KV cache or activation memory** in the simulator; expert weights only.
 - Measured MPS timings are single-device FP32 and include first-call warm-up for request 0.
 """)
-with c2:
-    with st.container(border=True, height="stretch"):
-        st.markdown("#### Threats to validity")
-        st.markdown("""
-- **Internal:** resources are reserved in event order without back-filling; replay of measured traces instead of new inference.
-- **Train/test leakage:** none in the controller or the held-out placement (verified by tests); Phase 3A in-sample placement is labelled as such.
-- **Construct:** the cost-aware rule optimises a forecast from 3 requests; thresholds were not tuned on held-out data, and should not be.
-- **External:** one model, one prompt mix, one hypothetical 4-GPU cluster; results may not transfer to other MoE models or real interconnects.
-- **Statistical:** single deterministic run per scenario; the runner supports Poisson arrivals with seeds for replicates.
-""")
+with ui.more("threats to validity and next experiments"):
+    with st.container():
+        with st.container(border=True):
+            st.markdown("#### Threats to validity")
+            st.markdown("""
+    - **Internal:** resources are reserved in event order without back-filling; replay of measured traces instead of new inference.
+    - **Train/test leakage:** none in the controller or the held-out placement (verified by tests); Phase 3A in-sample placement is labelled as such.
+    - **Construct:** the cost-aware rule optimises a forecast from 3 requests; thresholds were not tuned on held-out data, and should not be.
+    - **External:** one model, one prompt mix, one hypothetical 4-GPU cluster; results may not transfer to other MoE models or real interconnects.
+    - **Statistical:** single deterministic run per scenario; the runner supports Poisson arrivals with seeds for replicates.
+    """)
 
-with st.container(border=True):
-    st.markdown("#### Next experiments")
-    st.markdown("""
-1. Profile ≥ 100 prompts (`scripts/profile_routing.py --prompt-set extended`, with warm-up) and include generated tokens (decode routing).
-2. Replicate simulations with Poisson arrivals over many seeds; report means and 95% CIs (`scripts/run_experiment.py --arrival-process poisson --seed 1 2 3 …`).
-3. Make the controller forecast robust: rolling window of recent requests, p95 over more requests, or expected-cost formulation with a payback horizon.
-4. Incremental / layer-by-layer migration to cap link contention instead of one atomic 776-expert move.
-5. Calibrate compute and network parameters on real NVIDIA GPUs (see docs/FUTURE_GPU_VALIDATION.md).
-""")
+    with st.container(border=True):
+        st.markdown("#### Next experiments")
+        st.markdown("""
+    1. Profile ≥ 100 prompts (`scripts/profile_routing.py --prompt-set extended`, with warm-up) and include generated tokens (decode routing).
+    2. Replicate simulations with Poisson arrivals over many seeds; report means and 95% CIs (`scripts/run_experiment.py --arrival-process poisson --seed 1 2 3 …`).
+    3. Make the controller forecast robust: rolling window of recent requests, p95 over more requests, or expected-cost formulation with a payback horizon.
+    4. Incremental / layer-by-layer migration to cap link contention instead of one atomic 776-expert move.
+    5. Calibrate compute and network parameters on real NVIDIA GPUs (see docs/FUTURE_GPU_VALIDATION.md).
+    """)
 st.info(ui.SIM_DISCLAIMER, icon=":material/model_training:")
 
 ui.step_footer("app_pages/findings.py")

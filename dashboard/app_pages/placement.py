@@ -90,8 +90,7 @@ with st.container(horizontal=True):
     st.metric("Experts moved static → demand-aware", int(len(P.moved_experts(placements, "static", "demand_aware"))),
               border=True)
 
-c1, c2 = st.columns(2)
-with c1:
+with st.container():
     with st.container(border=True):
         ui.section("Normalized load per GPU (held-out requests)", "live",
                    caption="Assignments ÷ relative speed — a proxy for how long each GPU would be busy.")
@@ -102,30 +101,31 @@ with c1:
                         marker_color=ui.STRATEGY_COLORS[s])
         fig.update_layout(barmode="group", yaxis_title="Load proxy (assignments / speed)")
         ui.chart(fig, "Per-GPU normalized load for each placement strategy", height=330)
-with c2:
-    with st.container(border=True):
-        ui.section("Expert-weight residency and memory feasibility", "live",
-                   caption="Resident expert weights per GPU. The dashed line is the staging peak during migration.")
-        fig = go.Figure()
-        for s in C.STRATEGIES:
-            d = gpu[gpu.strategy == s]
-            fig.add_bar(name=ui.STRATEGY_LABEL[s], x=[f"GPU {g}" for g in d.gpu_id], y=d.weight_gb,
-                        marker_color=ui.STRATEGY_COLORS[s])
-        if cfg.gpu_memory_gb:
-            fig.add_hline(y=cfg.gpu_memory_gb, line_color=ui.RED, annotation_text="memory budget")
-        fig.update_layout(barmode="group", yaxis_title="Expert weights (GB)")
-        ui.chart(fig, "Expert weight memory per GPU", height=330)
+with ui.more("memory per GPU and the full comparison table"):
+    with st.container():
+        with st.container(border=True):
+            ui.section("Expert-weight residency and memory feasibility", "live",
+                       caption="Resident expert weights per GPU. The dashed line is the staging peak during migration.")
+            fig = go.Figure()
+            for s in C.STRATEGIES:
+                d = gpu[gpu.strategy == s]
+                fig.add_bar(name=ui.STRATEGY_LABEL[s], x=[f"GPU {g}" for g in d.gpu_id], y=d.weight_gb,
+                            marker_color=ui.STRATEGY_COLORS[s])
+            if cfg.gpu_memory_gb:
+                fig.add_hline(y=cfg.gpu_memory_gb, line_color=ui.RED, annotation_text="memory budget")
+            fig.update_layout(barmode="group", yaxis_title="Expert weights (GB)")
+            ui.chart(fig, "Expert weight memory per GPU", height=330)
 
-with st.container(border=True):
-    ui.section("Strategy comparison", "live")
-    show = summ.copy()
-    show["strategy"] = show.strategy.map(ui.STRATEGY_LABEL)
-    show["peak vs static"] = [f"{-ui.pct(v, static_peak):+.1f}%" for v in summ.peak_load]
-    ui.table(show.round(3), "Placement strategy comparison", column_config={
-        "peak_load": st.column_config.NumberColumn("peak load proxy", format="%.1f"),
-        "feasible": st.column_config.CheckboxColumn("feasible (slots & memory)")})
-    st.caption("Static = round-robin by expert index. Load-balanced = greedy by raw demand, ignores GPU speed. "
-               "Demand-aware = greedy on (load + demand) ÷ speed. Both greedy methods use training demand only.")
+    with st.container(border=True):
+        ui.section("Strategy comparison", "live")
+        show = summ.copy()
+        show["strategy"] = show.strategy.map(ui.STRATEGY_LABEL)
+        show["peak vs static"] = [f"{-ui.pct(v, static_peak):+.1f}%" for v in summ.peak_load]
+        ui.table(show.round(3), "Placement strategy comparison", column_config={
+            "peak_load": st.column_config.NumberColumn("peak load proxy", format="%.1f"),
+            "feasible": st.column_config.CheckboxColumn("feasible (slots & memory)")})
+        st.caption("Static = round-robin by expert index. Load-balanced = greedy by raw demand, ignores GPU speed. "
+                   "Demand-aware = greedy on (load + demand) ÷ speed. Both greedy methods use training demand only.")
 
 # ---------------------------------------------------------------- method
 with st.expander("How the experts are distributed — the method, step by step", icon=":material/school:"):
@@ -198,37 +198,38 @@ with st.container(border=True):
                "changes them and confirms the placement does not change); every expert is placed exactly once within "
                "the slot limit; and the saved results are regenerated exactly by the test suite.")
 
-# ---------------------------------------------------------------- assignment matrix
-with st.container(border=True):
-    strat = st.segmented_control("Inspect placement", list(C.STRATEGIES), default="demand_aware",
-                                 format_func=ui.STRATEGY_LABEL.get, key="pl_strat") or "demand_aware"
-    ui.section(f"Expert → GPU assignment matrix · {ui.STRATEGY_LABEL[strat]}", "live",
-               caption="Rows are layers, columns are experts; colour = simulated GPU.")
-    rows = placements[placements.strategy == strat]
-    mat = rows.pivot(index="layer_id", columns="expert_id", values="gpu_id")
-    colors = ui.GPU_COLORS[:cfg.num_gpus]
-    scale = []
-    for i, c in enumerate(colors):
-        scale += [[i / cfg.num_gpus, c], [(i + 1) / cfg.num_gpus, c]]
-    fig = go.Figure(go.Heatmap(z=mat.values, x=mat.columns, y=mat.index, colorscale=scale, zmin=-0.5,
-                               zmax=cfg.num_gpus - 0.5, xgap=1, ygap=1,
-                               colorbar=dict(title="GPU", tickvals=list(range(cfg.num_gpus))),
-                               hovertemplate="expert (L%{y}, E%{x}) → GPU %{z}<extra></extra>"))
-    fig.update_yaxes(autorange="reversed", title="Layer", dtick=1)
-    fig.update_xaxes(title="Expert", dtick=8)
-    ui.chart(fig, f"Assignment of 1024 experts to GPUs for {strat}", height=430)
+with ui.more("which GPU every expert is on (assignment matrix)"):
+    # ---------------------------------------------------------------- assignment matrix
+    with st.container(border=True):
+        strat = st.segmented_control("Inspect placement", list(C.STRATEGIES), default="demand_aware",
+                                     format_func=ui.STRATEGY_LABEL.get, key="pl_strat") or "demand_aware"
+        ui.section(f"Expert → GPU assignment matrix · {ui.STRATEGY_LABEL[strat]}", "live",
+                   caption="Rows are layers, columns are experts; colour = simulated GPU.")
+        rows = placements[placements.strategy == strat]
+        mat = rows.pivot(index="layer_id", columns="expert_id", values="gpu_id")
+        colors = ui.GPU_COLORS[:cfg.num_gpus]
+        scale = []
+        for i, c in enumerate(colors):
+            scale += [[i / cfg.num_gpus, c], [(i + 1) / cfg.num_gpus, c]]
+        fig = go.Figure(go.Heatmap(z=mat.values, x=mat.columns, y=mat.index, colorscale=scale, zmin=-0.5,
+                                   zmax=cfg.num_gpus - 0.5, xgap=1, ygap=1,
+                                   colorbar=dict(title="GPU", tickvals=list(range(cfg.num_gpus))),
+                                   hovertemplate="expert (L%{y}, E%{x}) → GPU %{z}<extra></extra>"))
+        fig.update_yaxes(autorange="reversed", title="Layer", dtick=1)
+        fig.update_xaxes(title="Expert", dtick=8)
+        ui.chart(fig, f"Assignment of 1024 experts to GPUs for {strat}", height=430)
 
-    g1, g2 = st.columns([1, 3])
-    with g1:
-        gsel = st.selectbox("GPU", range(cfg.num_gpus), key="pl_gpu", format_func=lambda g: f"GPU {g} (speed {cfg.gpu_speeds[g]:g})")
-        mine = rows[rows.gpu_id == gsel]
-        st.metric("Experts", len(mine), border=True)
-        st.metric("Train demand", int(mine.train_demand.sum()), border=True)
-        st.metric("Weights", f"{len(mine) * cfg.expert_bytes / C.GB:.2f} GB", border=True)
-    with g2:
-        lst = mine.assign(expert=[f"({l}, {e})" for l, e in zip(mine.layer_id, mine.expert_id)])
-        ui.table(lst[["expert", "layer_id", "expert_id", "train_demand", "test_demand"]]
-                 .sort_values("train_demand", ascending=False), f"Experts assigned to GPU {gsel}", height=300)
+        g1, g2 = st.columns([1, 3])
+        with g1:
+            gsel = st.selectbox("GPU", range(cfg.num_gpus), key="pl_gpu", format_func=lambda g: f"GPU {g} (speed {cfg.gpu_speeds[g]:g})")
+            mine = rows[rows.gpu_id == gsel]
+            st.metric("Experts", len(mine), border=True)
+            st.metric("Train demand", int(mine.train_demand.sum()), border=True)
+            st.metric("Weights", f"{len(mine) * cfg.expert_bytes / C.GB:.2f} GB", border=True)
+        with g2:
+            lst = mine.assign(expert=[f"({l}, {e})" for l, e in zip(mine.layer_id, mine.expert_id)])
+            ui.table(lst[["expert", "layer_id", "expert_id", "train_demand", "test_demand"]]
+                     .sort_values("train_demand", ascending=False), f"Experts assigned to GPU {gsel}", height=300)
 
 st.caption("Placement capacity counts expert slots; memory budget counts bytes. The simulator never places weights on real GPUs.")
 

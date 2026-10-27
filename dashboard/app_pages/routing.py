@@ -67,107 +67,109 @@ with st.container(border=True):
     fig.update_yaxes(title="Layer ID", autorange="reversed", dtick=1)
     ui.chart(fig, "Heatmap of expert demand for 16 layers by 64 experts", height=460)
 
-c1, c2 = st.columns([3, 2])
-with c1:
-    with st.container(border=True):
-        ui.section(f"Layer {layer_sel}: demand by workload", "derived",
-                   caption="Assignments per input token, per category; reveals workload-specific experts.")
-        lay = sub[sub.layer_id == layer_sel].groupby(["category", "expert_id"]).token_assignments.sum().reset_index()
-        cat_tok = tim[tim.request_id.isin(sel_reqs)].groupby("category").input_tokens.sum()
-        lay["rate"] = lay.token_assignments / lay.category.map(cat_tok)
-        fig = go.Figure()
-        for cat in sorted(lay.category.unique()):
-            d = lay[lay.category == cat]
-            fig.add_bar(name=cat, x=d.expert_id, y=d.rate, marker_color=ui.CATEGORY_COLORS.get(cat, ui.SLATE))
-        fig.update_layout(barmode="group", xaxis_title="Expert ID", yaxis_title="Assignments per token", bargap=0.15)
-        ui.chart(fig, f"Per-category expert demand in layer {layer_sel}", height=330)
-with c2:
-    with st.container(border=True):
-        ui.section("Most-selected experts", "measured")
-        top = agg.assign(**{unit: value}).sort_values("token_assignments", ascending=False).head(15)
-        top.insert(0, "expert", [f"({l}, {e})" for l, e in zip(top.layer_id, top.expert_id)])
-        ui.table(top[["expert", "token_assignments", unit]].round(3), "Top 15 layer-specific experts", height=330)
-
-# ---------------------------------------------------------------- imbalance + divergence
-def jsd(p, q):
-    p, q = p / p.sum(), q / q.sum()
-    m = 0.5 * (p + q)
-    kl = lambda a, b: np.sum(np.where(a > 0, a * np.log2(np.where(a > 0, a, 1) / np.where(b > 0, b, 1)), 0))
-    return float(np.sqrt(0.5 * kl(p, m) + 0.5 * kl(q, m)))
-
-
-rows = []
-for layer, g in agg.groupby("layer_id"):
-    v = g.token_assignments.to_numpy(float)
-    rows.append({"layer_id": layer, "max_over_mean": v.max() / v.mean(), "cv": v.std() / v.mean(),
-                 "share_top8": np.sort(v)[-8:].sum() / v.sum()})
-imb = pd.DataFrame(rows)
-
-div_rows = []
-cat_list = sorted(sub.category.unique())
-for layer in range(C.NUM_LAYERS):
-    L = sub[sub.layer_id == layer].groupby(["category", "expert_id"]).token_assignments.sum().unstack(fill_value=0)
-    for i, a in enumerate(cat_list):
-        for b in cat_list[i + 1:]:
-            if a in L.index and b in L.index:
-                div_rows.append({"layer_id": layer, "pair": f"{a} vs {b}", "jsd": jsd(L.loc[a].to_numpy(float), L.loc[b].to_numpy(float))})
-div = pd.DataFrame(div_rows)
-
-c1, c2 = st.columns(2)
-with c1:
-    with st.container(border=True):
-        ui.section("Demand imbalance within each layer", "derived",
-                   caption="Max ÷ mean assignments across the 64 experts of a layer. 1.0 = perfectly even.")
-        fig = go.Figure(go.Bar(x=imb.layer_id, y=imb.max_over_mean, marker_color=ui.TEAL,
-                               customdata=imb[["cv", "share_top8"]],
-                               hovertemplate="layer %{x}<br>max/mean %{y:.2f}<br>CV %{customdata[0]:.2f}"
-                                             "<br>top-8 share %{customdata[1]:.0%}<extra></extra>"))
-        fig.update_layout(xaxis_title="Layer", yaxis_title="Max / mean", xaxis_dtick=1)
-        ui.chart(fig, "Per-layer expert demand imbalance", height=300)
-with c2:
-    with st.container(border=True):
-        ui.section("Expert-selection difference between workloads", "derived",
-                   caption="Jensen–Shannon distance between categories' expert distributions (0 = identical, 1 = disjoint).")
-        if div.empty:
-            st.info("Select at least two categories.")
-        else:
+with ui.more("per-layer charts, imbalance, per-question timing, expert drill-down"):
+    c1, c2 = st.columns([3, 2])
+    with c1:
+        with st.container(border=True):
+            ui.section(f"Layer {layer_sel}: demand by workload", "derived",
+                       caption="Assignments per input token, per category; reveals workload-specific experts.")
+            lay = sub[sub.layer_id == layer_sel].groupby(["category", "expert_id"]).token_assignments.sum().reset_index()
+            cat_tok = tim[tim.request_id.isin(sel_reqs)].groupby("category").input_tokens.sum()
+            lay["rate"] = lay.token_assignments / lay.category.map(cat_tok)
             fig = go.Figure()
-            for i, (pair, d) in enumerate(div.groupby("pair")):
-                fig.add_scatter(x=d.layer_id, y=d.jsd, name=pair, mode="lines+markers",
-                                line=dict(color=[ui.TEAL, ui.BLUE, ui.VIOLET][i % 3]))
-            fig.update_layout(xaxis_title="Layer", yaxis_title="JS distance", xaxis_dtick=1, yaxis_range=[0, 1])
-            ui.chart(fig, "Workload divergence of expert selection per layer", height=300)
+            for cat in sorted(lay.category.unique()):
+                d = lay[lay.category == cat]
+                fig.add_bar(name=cat, x=d.expert_id, y=d.rate, marker_color=ui.CATEGORY_COLORS.get(cat, ui.SLATE))
+            fig.update_layout(barmode="group", xaxis_title="Expert ID", yaxis_title="Assignments per token", bargap=0.15)
+            ui.chart(fig, f"Per-category expert demand in layer {layer_sel}", height=330)
+    with c2:
+        with st.container(border=True):
+            ui.section("Most-selected experts", "measured")
+            top = agg.assign(**{unit: value}).sort_values("token_assignments", ascending=False).head(15)
+            top.insert(0, "expert", [f"({l}, {e})" for l, e in zip(top.layer_id, top.expert_id)])
+            ui.table(top[["expert", "token_assignments", unit]].round(3), "Top 15 layer-specific experts", height=330)
 
-# ---------------------------------------------------------------- per request
-with st.container(border=True):
-    ui.section("Per-request routing metrics and forward-pass timing", "measured", source="workload_timings.csv")
-    per = sub.groupby("request_id").apply(
-        lambda g: pd.Series({"distinct_experts": int((g.token_assignments > 0).sum()),
-                             "max_expert_share": g.groupby("layer_id").token_assignments.max().mean() / g.input_tokens.iloc[0]}),
-        include_groups=False).reset_index()
-    per = tim[tim.request_id.isin(sel_reqs)].merge(per, on="request_id")
-    per["split"] = np.where(per.request_id.isin(C.DEFAULT.train_ids), "train", "test")
-    per["seconds_per_token"] = per.forward_seconds / per.input_tokens
-    t1, t2 = st.columns([3, 2])
-    with t1:
-        ui.table(per[["request_id", "category", "split", "input_tokens", "forward_seconds", "seconds_per_token",
-                      "distinct_experts", "max_expert_share"]].round(3), "Per-request routing and timing",
-                 column_config={"max_expert_share": st.column_config.NumberColumn(
-                     "top expert share", help="Mean over layers of the busiest expert's assignments ÷ tokens")})
-        st.caption("Request 0 includes first-call warm-up on MPS (no warm-up pass was run). Timing is a single "
-                   "Apple-silicon device in FP32, not distributed inference.")
-    with t2:
-        fig = go.Figure(go.Bar(x=[f"req {r}" for r in per.request_id], y=per.forward_seconds,
-                               marker_color=[ui.CATEGORY_COLORS.get(c, ui.SLATE) for c in per.category],
-                               text=[f"{t} tok" for t in per.input_tokens], textposition="outside"))
-        fig.update_layout(yaxis_title="Forward pass (s)", showlegend=False)
-        ui.chart(fig, "Measured forward-pass time per request", height=280)
+    # ---------------------------------------------------------------- imbalance + divergence
+    def jsd(p, q):
+        p, q = p / p.sum(), q / q.sum()
+        m = 0.5 * (p + q)
+        kl = lambda a, b: np.sum(np.where(a > 0, a * np.log2(np.where(a > 0, a, 1) / np.where(b > 0, b, 1)), 0))
+        return float(np.sqrt(0.5 * kl(p, m) + 0.5 * kl(q, m)))
 
-with st.expander("Expert drill-down", icon=":material/search:"):
-    e = st.number_input("Expert ID in focus layer", 0, C.EXPERTS_PER_LAYER - 1, 0, key="rt_expert")
-    d = sub[(sub.layer_id == layer_sel) & (sub.expert_id == e)]
-    st.markdown(f"Expert `({layer_sel}, {e})` received **{int(d.token_assignments.sum())}** assignments from the selected requests.")
-    ui.table(d[["request_id", "category", "token_assignments", "input_tokens"]], "Assignments per request for the chosen expert")
+
+    rows = []
+    for layer, g in agg.groupby("layer_id"):
+        v = g.token_assignments.to_numpy(float)
+        rows.append({"layer_id": layer, "max_over_mean": v.max() / v.mean(), "cv": v.std() / v.mean(),
+                     "share_top8": np.sort(v)[-8:].sum() / v.sum()})
+    imb = pd.DataFrame(rows)
+
+    div_rows = []
+    cat_list = sorted(sub.category.unique())
+    for layer in range(C.NUM_LAYERS):
+        L = sub[sub.layer_id == layer].groupby(["category", "expert_id"]).token_assignments.sum().unstack(fill_value=0)
+        for i, a in enumerate(cat_list):
+            for b in cat_list[i + 1:]:
+                if a in L.index and b in L.index:
+                    div_rows.append({"layer_id": layer, "pair": f"{a} vs {b}", "jsd": jsd(L.loc[a].to_numpy(float), L.loc[b].to_numpy(float))})
+    div = pd.DataFrame(div_rows)
+
+    c1, c2 = st.columns(2)
+    with c1:
+        with st.container(border=True):
+            ui.section("Demand imbalance within each layer", "derived",
+                       caption="Max ÷ mean assignments across the 64 experts of a layer. 1.0 = perfectly even.")
+            fig = go.Figure(go.Bar(x=imb.layer_id, y=imb.max_over_mean, marker_color=ui.TEAL,
+                                   customdata=imb[["cv", "share_top8"]],
+                                   hovertemplate="layer %{x}<br>max/mean %{y:.2f}<br>CV %{customdata[0]:.2f}"
+                                                 "<br>top-8 share %{customdata[1]:.0%}<extra></extra>"))
+            fig.update_layout(xaxis_title="Layer", yaxis_title="Max / mean", xaxis_dtick=1)
+            ui.chart(fig, "Per-layer expert demand imbalance", height=300)
+    with c2:
+        with st.container(border=True):
+            ui.section("Expert-selection difference between workloads", "derived",
+                       caption="Jensen–Shannon distance between categories' expert distributions (0 = identical, 1 = disjoint).")
+            if div.empty:
+                st.info("Select at least two categories.")
+            else:
+                fig = go.Figure()
+                for i, (pair, d) in enumerate(div.groupby("pair")):
+                    fig.add_scatter(x=d.layer_id, y=d.jsd, name=pair, mode="lines+markers",
+                                    line=dict(color=[ui.TEAL, ui.BLUE, ui.VIOLET][i % 3]))
+                fig.update_layout(xaxis_title="Layer", yaxis_title="JS distance", xaxis_dtick=1, yaxis_range=[0, 1])
+                ui.chart(fig, "Workload divergence of expert selection per layer", height=300)
+
+    # ---------------------------------------------------------------- per request
+    with st.container(border=True):
+        ui.section("Per-request routing metrics and forward-pass timing", "measured", source="workload_timings.csv")
+        per = sub.groupby("request_id").apply(
+            lambda g: pd.Series({"distinct_experts": int((g.token_assignments > 0).sum()),
+                                 "max_expert_share": g.groupby("layer_id").token_assignments.max().mean() / g.input_tokens.iloc[0]}),
+            include_groups=False).reset_index()
+        per = tim[tim.request_id.isin(sel_reqs)].merge(per, on="request_id")
+        per["split"] = np.where(per.request_id.isin(C.DEFAULT.train_ids), "train", "test")
+        per["seconds_per_token"] = per.forward_seconds / per.input_tokens
+        t1, t2 = st.columns([3, 2])
+        with t1:
+            ui.table(per[["request_id", "category", "split", "input_tokens", "forward_seconds", "seconds_per_token",
+                          "distinct_experts", "max_expert_share"]].round(3), "Per-request routing and timing",
+                     column_config={"max_expert_share": st.column_config.NumberColumn(
+                         "top expert share", help="Mean over layers of the busiest expert's assignments ÷ tokens")})
+            st.caption("Request 0 includes first-call warm-up on MPS (no warm-up pass was run). Timing is a single "
+                       "Apple-silicon device in FP32, not distributed inference.")
+        with t2:
+            fig = go.Figure(go.Bar(x=[f"req {r}" for r in per.request_id], y=per.forward_seconds,
+                                   marker_color=[ui.CATEGORY_COLORS.get(c, ui.SLATE) for c in per.category],
+                                   text=[f"{t} tok" for t in per.input_tokens], textposition="outside"))
+            fig.update_layout(yaxis_title="Forward pass (s)", showlegend=False)
+            ui.chart(fig, "Measured forward-pass time per request", height=280)
+
+    with st.container(border=True):
+        ui.section("Expert drill-down", "measured")
+        e = st.number_input("Expert ID in focus layer", 0, C.EXPERTS_PER_LAYER - 1, 0, key="rt_expert")
+        d = sub[(sub.layer_id == layer_sel) & (sub.expert_id == e)]
+        st.markdown(f"Expert `({layer_sel}, {e})` received **{int(d.token_assignments.sum())}** assignments from the selected requests.")
+        ui.table(d[["request_id", "category", "token_assignments", "input_tokens"]], "Assignments per request for the chosen expert")
 
 st.caption("Measured routing ≠ simulated placement: GPU assignments and latencies on other pages are simulation outputs "
            "that use this routing as input.")

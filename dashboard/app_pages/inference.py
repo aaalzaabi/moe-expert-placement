@@ -78,67 +78,68 @@ with st.container(border=True):
     fig.update_yaxes(categoryorder="array", categoryarray=[f"GPU {g}" for g in reversed(range(cfg.num_gpus))])
     ui.chart(fig, "Gantt chart of expert compute on each simulated GPU", height=320)
 
-c1, c2 = st.columns(2)
-with c1:
-    with st.container(border=True):
-        ui.section("Request progress through 16 layers", "live",
-                   caption="A layer starts only after every expert of the previous layer has returned.")
-        lay = res.layers
-        fig = go.Figure(go.Bar(y=[f"req {r}" for r in lay.request_id], x=lay.end_ms - lay.start_ms, base=lay.start_ms,
-                               orientation="h", marker=dict(color=lay.layer_id, colorscale=ui.HEAT, line_width=0.5,
-                                                            line_color="#0b1220", colorbar=dict(title="layer")),
-                               customdata=lay[["layer_id", "start_ms", "end_ms"]],
-                               hovertemplate="layer %{customdata[0]}<br>%{customdata[1]:.2f} → %{customdata[2]:.2f} ms<extra></extra>"))
-        for r in arrivals.itertuples():
-            fig.add_scatter(x=[r.arrival_ms], y=[f"req {r.request_id}"], mode="markers", showlegend=False,
-                            marker=dict(symbol="triangle-right", size=12, color=ui.AMBER), hovertext="arrival")
-        fig.update_layout(xaxis_title="Simulated time (ms)", showlegend=False)
-        ui.chart(fig, "Per-request layer timeline with arrival markers", height=300)
-with c2:
-    with st.container(border=True):
-        ui.section("Queueing delay per GPU", "live",
-                   caption="Time an expert task waited for its GPU after its activations arrived.")
-        comp = comp.assign(wait_ms=comp.start_ms - comp.inbound_ms)
-        fig = go.Figure()
-        for g, d in comp.groupby("gpu_id"):
-            fig.add_box(y=d.wait_ms, name=f"GPU {g}", marker_color=ui.GPU_COLORS[g % 8], boxpoints=False)
-        fig.update_layout(yaxis_title="Wait (ms)", showlegend=False)
-        ui.chart(fig, "Distribution of GPU queueing delay", height=300)
-
-tr = res.transfers
-with st.container(border=True):
-    ui.section("Network link activity", "live",
-               caption="Dispatch (gateway → expert GPU) and return transfers. Local experts on the gateway need no transfer.")
-    if tr.empty:
-        st.info("No remote transfers in this configuration.")
-    else:
-        tr = tr.assign(link=[f"{a}→{b}" for a, b in zip(tr.src_gpu, tr.dst_gpu)])
-        vol = tr.groupby(["link", "kind"]).bytes.sum().reset_index()
-        l1, l2 = st.columns([3, 2])
-        with l1:
+with ui.more("request progress, queues, network links, all placements"):
+    c1, c2 = st.columns(2)
+    with c1:
+        with st.container(border=True):
+            ui.section("Request progress through 16 layers", "live",
+                       caption="A layer starts only after every expert of the previous layer has returned.")
+            lay = res.layers
+            fig = go.Figure(go.Bar(y=[f"req {r}" for r in lay.request_id], x=lay.end_ms - lay.start_ms, base=lay.start_ms,
+                                   orientation="h", marker=dict(color=lay.layer_id, colorscale=ui.HEAT, line_width=0.5,
+                                                                line_color="#0b1220", colorbar=dict(title="layer")),
+                                   customdata=lay[["layer_id", "start_ms", "end_ms"]],
+                                   hovertemplate="layer %{customdata[0]}<br>%{customdata[1]:.2f} → %{customdata[2]:.2f} ms<extra></extra>"))
+            for r in arrivals.itertuples():
+                fig.add_scatter(x=[r.arrival_ms], y=[f"req {r.request_id}"], mode="markers", showlegend=False,
+                                marker=dict(symbol="triangle-right", size=12, color=ui.AMBER), hovertext="arrival")
+            fig.update_layout(xaxis_title="Simulated time (ms)", showlegend=False)
+            ui.chart(fig, "Per-request layer timeline with arrival markers", height=300)
+    with c2:
+        with st.container(border=True):
+            ui.section("Queueing delay per GPU", "live",
+                       caption="Time an expert task waited for its GPU after its activations arrived.")
+            comp = comp.assign(wait_ms=comp.start_ms - comp.inbound_ms)
             fig = go.Figure()
-            for kind, color in [("dispatch", ui.BLUE), ("return", ui.TEAL)]:
-                d = tr[tr.kind == kind]
-                fig.add_bar(y=d.link, x=d.end_ms - d.start_ms, base=d.start_ms, orientation="h", name=kind,
-                            marker_color=color, marker_line_width=0)
-            fig.update_layout(barmode="overlay", xaxis_title="Simulated time (ms)")
-            ui.chart(fig, "Timeline of link transfers", height=300)
-        with l2:
-            fig = go.Figure()
-            for kind, color in [("dispatch", ui.BLUE), ("return", ui.TEAL)]:
-                d = vol[vol.kind == kind]
-                fig.add_bar(x=d.link, y=d.bytes / C.MB, name=kind, marker_color=color)
-            fig.update_layout(barmode="stack", yaxis_title="MB")
-            ui.chart(fig, "Activation volume per link", height=300)
+            for g, d in comp.groupby("gpu_id"):
+                fig.add_box(y=d.wait_ms, name=f"GPU {g}", marker_color=ui.GPU_COLORS[g % 8], boxpoints=False)
+            fig.update_layout(yaxis_title="Wait (ms)", showlegend=False)
+            ui.chart(fig, "Distribution of GPU queueing delay", height=300)
 
-with st.container(border=True):
-    ui.section("All placements under this scenario", "live")
-    rows = []
-    for st_name in C.STRATEGIES:
-        r = ui.simulate(ui.cfg_key(cfg.with_(source_strategy=st_name)), tuple(ids), False).summary
-        rows.append({"placement": ui.STRATEGY_LABEL[st_name], **{k: r[k] for k in
-                     ["p50_latency_ms", "p95_latency_ms", "makespan_ms", "total_link_mb", "remote_expert_calls"]}})
-    ui.table(pd.DataFrame(rows).round(2), "Simulated latency for static, balanced and demand-aware placements")
-    st.caption(ui.SIM_DISCLAIMER + " Prefill only; decode steps, attention compute and KV cache are not modelled.")
+    tr = res.transfers
+    with st.container(border=True):
+        ui.section("Network link activity", "live",
+                   caption="Dispatch (gateway → expert GPU) and return transfers. Local experts on the gateway need no transfer.")
+        if tr.empty:
+            st.info("No remote transfers in this configuration.")
+        else:
+            tr = tr.assign(link=[f"{a}→{b}" for a, b in zip(tr.src_gpu, tr.dst_gpu)])
+            vol = tr.groupby(["link", "kind"]).bytes.sum().reset_index()
+            l1, l2 = st.columns([3, 2])
+            with l1:
+                fig = go.Figure()
+                for kind, color in [("dispatch", ui.BLUE), ("return", ui.TEAL)]:
+                    d = tr[tr.kind == kind]
+                    fig.add_bar(y=d.link, x=d.end_ms - d.start_ms, base=d.start_ms, orientation="h", name=kind,
+                                marker_color=color, marker_line_width=0)
+                fig.update_layout(barmode="overlay", xaxis_title="Simulated time (ms)")
+                ui.chart(fig, "Timeline of link transfers", height=300)
+            with l2:
+                fig = go.Figure()
+                for kind, color in [("dispatch", ui.BLUE), ("return", ui.TEAL)]:
+                    d = vol[vol.kind == kind]
+                    fig.add_bar(x=d.link, y=d.bytes / C.MB, name=kind, marker_color=color)
+                fig.update_layout(barmode="stack", yaxis_title="MB")
+                ui.chart(fig, "Activation volume per link", height=300)
+
+    with st.container(border=True):
+        ui.section("All placements under this scenario", "live")
+        rows = []
+        for st_name in C.STRATEGIES:
+            r = ui.simulate(ui.cfg_key(cfg.with_(source_strategy=st_name)), tuple(ids), False).summary
+            rows.append({"placement": ui.STRATEGY_LABEL[st_name], **{k: r[k] for k in
+                         ["p50_latency_ms", "p95_latency_ms", "makespan_ms", "total_link_mb", "remote_expert_calls"]}})
+        ui.table(pd.DataFrame(rows).round(2), "Simulated latency for static, balanced and demand-aware placements")
+        st.caption(ui.SIM_DISCLAIMER + " Prefill only; decode steps, attention compute and KV cache are not modelled.")
 
 ui.step_footer("app_pages/inference.py")
