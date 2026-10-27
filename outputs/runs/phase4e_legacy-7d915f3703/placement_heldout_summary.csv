@@ -1,0 +1,4 @@
+strategy,peak_load,mean_load,imbalance,max_experts_per_gpu,max_weight_gb,feasible
+static,896.25,642.125,1.3957562779832586,256,2.048,True
+balanced,868.75,637.8870192307693,1.361918292439356,256,2.048,True
+demand_aware,632.5,605.0168269230769,1.0454254689356224,256,2.048,True

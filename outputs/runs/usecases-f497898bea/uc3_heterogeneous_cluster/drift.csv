@@ -1,0 +1,6 @@
+model,tau_err,tau_regret,harmful_and_high_error,harmless_high_error,harmful_low_error,harmless_low_error,error_trigger_precision,error_trigger_recall,corr_wape_regret
+ewma,0.1,0.02,0,20,0,27,0.0,,0.027456930086054005
+global_ewma,0.1,0.02,0,5,0,42,0.0,,0.014379935247615648
+naive_last,0.1,0.02,0,21,0,26,0.0,,-0.0701366431039567
+seasonal_naive,0.1,0.02,0,5,0,42,0.0,,-0.21570959713873283
+site_ewma,0.1,0.02,0,5,0,42,0.0,,0.014379935247615648

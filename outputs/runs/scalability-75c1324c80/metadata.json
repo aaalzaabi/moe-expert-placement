@@ -1,0 +1,79 @@
+{
+  "run_id": "scalability-75c1324c80",
+  "name": "scalability",
+  "status": "complete",
+  "created_utc": "2026-10-22T19:22:52+00:00",
+  "command": "scripts/run_scalability.py",
+  "params": {
+    "repeats": 5,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "grid": {
+      "experts": [
+        16,
+        64,
+        256,
+        1024,
+        4096,
+        16384
+      ],
+      "devices_per_site": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32
+      ],
+      "sites": [
+        1,
+        2,
+        3,
+        5,
+        8
+      ],
+      "replica_frac": [
+        0.0,
+        0.1,
+        0.25,
+        0.5,
+        1.0,
+        2.0
+      ],
+      "constraints": [
+        "none",
+        "capacity",
+        "capacity+memory",
+        "capacity+memory+residency"
+      ]
+    },
+    "base": {
+      "experts": 1024,
+      "sites": 3,
+      "devices_per_site": 4,
+      "replica_frac": 0.25,
+      "constraints": "capacity+memory+residency"
+    },
+    "machine": "Linux-6.8.0-138-generic-aarch64-with-glibc2.35",
+    "processor": "aarch64"
+  },
+  "routing_file": "/sessions/rcw-015izgdpwgfnr68a9zafib7h/mnt/MOE/moe-expert-placement/outputs/workload_routing.csv",
+  "routing_sha256": "d552124bdde4eb819a8c6a80b479d02ad1a899130f123796daab741a5e502366",
+  "result_kind": "measured planner run time + simulated plan quality",
+  "assumptions": "Planner wall time is MEASURED on this machine. Demand is synthetic (resampled from the measured OLMoE expert distribution); J and latency come from the analytic model with HYPOTHETICAL hardware parameters.",
+  "files": [
+    "growth_fits.csv",
+    "optimality_gap.csv",
+    "scalability.csv"
+  ],
+  "versions": {
+    "python": "3.10.12",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "moeplace": "0.2.0",
+    "platform": "Linux-6.8.0-138-generic-aarch64-with-glibc2.35"
+  }
+}

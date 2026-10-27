@@ -1,0 +1,19 @@
+# Model weights (13 GB) and tokenizer stay local; only the small JSON metadata the
+# dashboard and tests read (config.json, model.safetensors.index.json) is tracked.
+models/**
+!models/OLMoE-1B-7B-0125-Instruct/
+!models/OLMoE-1B-7B-0125-Instruct/config.json
+!models/OLMoE-1B-7B-0125-Instruct/model.safetensors.index.json
+
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.streamlit_dashboard.log
+
+# Resume caches written by run_usecases.py while a run is in progress
+outputs/runs/.partial-*/
+
+# Local editor/agent tooling (symlinks into .venv)
+.claude/
+.agents/

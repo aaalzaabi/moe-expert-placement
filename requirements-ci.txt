@@ -1,0 +1,6 @@
+# Minimal set for CI: the moeplace package, tests and dashboard never import torch,
+# so the model-loading packages in requirements.txt are not installed here.
+streamlit==1.66.1
+plotly==7.1.0
+pandas==3.0.6
+numpy==2.4.6

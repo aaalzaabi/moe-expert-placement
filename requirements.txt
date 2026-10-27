@@ -1,0 +1,10 @@
+# Versions installed in .venv (Python 3.11.14) when the project was audited on 2026-10-22.
+# Documentation of the working environment; the environment itself was not modified.
+torch==2.14.1
+transformers==4.57.6
+accelerate==1.15.0
+safetensors==0.8.0
+streamlit==1.66.1
+plotly==7.1.0
+pandas==3.0.6
+numpy==2.4.6

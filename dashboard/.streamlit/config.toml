@@ -1,0 +1,52 @@
+# AI Infrastructure Control Center theme (script-level config: applies wherever
+# `streamlit run dashboard/app.py` is launched from).
+
+[theme]
+base = "dark"
+primaryColor = "#14b8a6"
+backgroundColor = "#0b1220"
+secondaryBackgroundColor = "#111b2e"
+codeBackgroundColor = "#0e1729"
+textColor = "#d6e0ee"
+linkColor = "#5eead4"
+borderColor = "#1e2b45"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "6px"
+font = "sans-serif"
+codeFont = "monospace"
+baseFontSize = 14
+headingFontWeights = [650, 600, 600, 550, 500, 500]
+headingFontSizes = ["28px", "22px", "18px", "16px", "14px", "12px"]
+metricValueFontWeight = 600
+linkUnderline = false
+
+blueColor = "#60a5fa"
+greenColor = "#34d399"
+yellowColor = "#fbbf24"
+orangeColor = "#f59e0b"
+redColor = "#f87171"
+violetColor = "#a78bfa"
+grayColor = "#94a3b8"
+
+dataframeHeaderBackgroundColor = "#13213a"
+dataframeBorderColor = "#1e2b45"
+
+chartCategoricalColors = ["#2dd4bf", "#60a5fa", "#a78bfa", "#f59e0b", "#f472b6", "#94a3b8", "#34d399", "#fb7185"]
+chartSequentialColors = ["#0b1a2e", "#0d2a44", "#0f3a58", "#0f4c6b", "#0e5f7a", "#0f7487", "#14898f", "#1f9f96", "#38b8a0", "#7dd3c0"]
+
+[theme.sidebar]
+backgroundColor = "#0e1728"
+secondaryBackgroundColor = "#13203a"
+
+[server]
+# Reload the shared moeplace package when it changes (by default Streamlit only watches dashboard/).
+# Absolute path required; update it if the project folder moves.
+folderWatchList = ["/Users/Ayesha Ali Obaid Ali Alzaabi/Desktop/MOE/moe-expert-placement/moeplace"]
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"

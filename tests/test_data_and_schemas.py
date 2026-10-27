@@ -1,0 +1,123 @@
+"""CSV schema validation, measured-data invariants, provenance coverage and config validation."""
+import json
+import unittest
+
+import pandas as pd
+
+from tests.helpers import C, D, routing
+from moeplace.paths import OUTPUTS
+from moeplace.registry import ARTIFACTS, BY_PATH
+
+
+class TestSchemas(unittest.TestCase):
+    def test_every_saved_csv_matches_schema(self):
+        for name in D.SCHEMAS:
+            with self.subTest(name=name):
+                df = D.read_csv(name)
+                self.assertGreater(len(df), 0)
+
+    def test_missing_column_raises_schema_error(self):
+        with self.assertRaises(D.SchemaError):
+            D.read_csv("workload_timings.csv", schema={"not_a_column"})
+
+    def test_missing_file_has_helpful_message(self):
+        with self.assertRaises(FileNotFoundError) as ctx:
+            D.read_csv("does_not_exist.csv")
+        self.assertIn("Required file not found", str(ctx.exception))
+
+
+class TestMeasuredRouting(unittest.TestCase):
+    def test_top8_invariant_and_complete_grid(self):
+        r = routing()
+        self.assertEqual(r.request_id.nunique(), 6)
+        self.assertEqual(len(r), 6 * C.TOTAL_EXPERT_SLOTS)
+        D.validate_routing(r)  # raises on violation
+
+    def test_validation_detects_corruption(self):
+        bad = routing().copy()
+        bad.loc[bad.index[0], "token_assignments"] += 1
+        with self.assertRaises(D.SchemaError):
+            D.validate_routing(bad)
+
+    def test_timings_align_with_routing(self):
+        t = D.load_timings()
+        r = routing().groupby("request_id").input_tokens.first()
+        self.assertTrue((t.set_index("request_id").input_tokens == r).all())
+
+    def test_train_test_split_has_one_prompt_per_category(self):
+        r = routing().groupby("request_id").category.first()
+        self.assertEqual(sorted(r.loc[list(C.DEFAULT.train_ids)]), ["ai", "coding", "general"])
+        self.assertEqual(sorted(r.loc[list(C.DEFAULT.test_ids)]), ["ai", "coding", "general"])
+
+    def test_demand_is_complete_index(self):
+        d = D.demand(routing(), (1,))
+        self.assertEqual(len(d), C.TOTAL_EXPERT_SLOTS)
+        self.assertEqual(int(d.sum()), int(routing().query("request_id == 1").token_assignments.sum()))
+
+
+class TestCheckpointFacts(unittest.TestCase):
+    def test_expert_bytes_match_checkpoint_metadata(self):
+        summary, tensors = D.expert_memory()
+        self.assertEqual(len(tensors), 3 * C.TOTAL_EXPERT_SLOTS)
+        self.assertTrue((tensors.dtype == "BF16").all())
+        per_expert = tensors.groupby(["layer_id", "expert_id"]).bytes.sum()
+        self.assertTrue((per_expert == C.CHECKPOINT_EXPERT_BYTES).all())
+        self.assertAlmostEqual(summary.expert_bytes.sum() / C.GB, 12.884901888, places=6)
+
+    def test_model_config_matches_constants(self):
+        mc = D.model_config()
+        self.assertEqual((mc["num_hidden_layers"], mc["num_experts"], mc["num_experts_per_tok"]),
+                         (C.NUM_LAYERS, C.EXPERTS_PER_LAYER, C.TOP_K))
+        self.assertEqual((mc["hidden_size"], mc["intermediate_size"]), (C.HIDDEN_SIZE, C.EXPERT_INTERMEDIATE_SIZE))
+
+
+class TestProvenance(unittest.TestCase):
+    def test_every_original_csv_has_provenance(self):
+        on_disk = {str(p.relative_to(OUTPUTS)) for p in OUTPUTS.rglob("*.csv")
+                   if not p.relative_to(OUTPUTS).parts[0] in ("runs", "measurements")}
+        self.assertEqual(on_disk - set(BY_PATH), set(), "CSV without a provenance entry")
+
+    def test_kinds_are_known(self):
+        self.assertTrue({a.kind for a in ARTIFACTS} <= {"measured", "checkpoint", "derived", "simulated"})
+        measured = {a.path for a in ARTIFACTS if a.kind == "measured"}
+        self.assertEqual(measured, {"expert_routing.csv", "workload_routing.csv", "workload_timings.csv"})
+
+
+class TestConfig(unittest.TestCase):
+    def test_default_matches_legacy_constants(self):
+        d = C.DEFAULT
+        self.assertEqual(d.gpu_speeds, (1.0, 1.3, 0.8, 1.6))
+        self.assertEqual((d.capacity_slots, d.staging_slots), (256, 512))
+        self.assertEqual((d.train_ids, d.test_ids), ((0, 2, 4), (1, 3, 5)))
+        self.assertEqual(C.CHECKPOINT_EXPERT_BYTES, 12_582_912)
+
+    def test_units_gb_per_s_not_gbps(self):
+        # 1 GB at 1 GB/s with zero latency takes exactly 1000 ms (it would be 8000 ms if it were Gbps).
+        self.assertAlmostEqual(C.transfer_ms(1e9, 1.0, 0.0), 1000.0)
+        self.assertAlmostEqual(C.transfer_ms(12_582_912, 100.0, 0.1), 0.1 + 0.12582912)
+
+    def test_validation_errors(self):
+        cases = [dict(gpu_speeds=(1.0, -1.0, 1.0, 1.0)), dict(bandwidth_gb_per_s=0),
+                 dict(train_ids=(0, 1), test_ids=(1, 3)), dict(gpu_speeds=(1.0, 1.0), placement_capacity_slots=100),
+                 dict(link_model="mesh"), dict(gateway_gpu=7), dict(source_strategy="random")]
+        for change in cases:
+            with self.subTest(change=change), self.assertRaises(C.ConfigError):
+                C.DEFAULT.with_(**change)
+
+    def test_round_trip_and_fingerprint(self):
+        cfg = C.DEFAULT.with_(bandwidth_gb_per_s=25.0)
+        again = C.SimConfig.from_dict(json.loads(json.dumps(cfg.to_dict())))
+        self.assertEqual(cfg, again)
+        self.assertEqual(cfg.fingerprint(), again.fingerprint())
+        self.assertNotEqual(cfg.fingerprint(), C.DEFAULT.fingerprint())
+        with self.assertRaises(C.ConfigError):
+            C.SimConfig.from_dict({"bogus": 1})
+
+    def test_auto_capacity_for_other_gpu_counts(self):
+        cfg = C.DEFAULT.with_(gpu_speeds=(1,) * 6, placement_capacity_slots=None, staging_capacity_slots=None)
+        self.assertEqual(cfg.capacity_slots, 171)
+        self.assertEqual(cfg.staging_slots, 342)
+
+
+if __name__ == "__main__":
+    unittest.main()

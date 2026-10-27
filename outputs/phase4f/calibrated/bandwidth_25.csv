@@ -1,0 +1,3 @@
+policy,migration_state,migration_activation_ms,moved_experts,migration_mb,total_link_mb,remote_expert_calls,p50_latency_ms,p95_latency_ms,makespan_ms
+static,disabled,,0,0.0,17.48992,1264,158.0455281599999,194.86331662153904,528.5573728000012
+migrate,active,144.64541951999922,776,9764.339712,9782.075392,1296,171.1817174399999,190.54561977599928,521.54454512
