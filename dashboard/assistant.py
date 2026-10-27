@@ -59,6 +59,18 @@ def _method(f):
         ("app_pages/placement.py", "Where should experts go?"))
 
 
+def _visual(f):
+    return Answer(
+        "Open **3b. Watch the GPUs at work (visual)**. It draws each simulated GPU as a grid of 256 slots and has two "
+        "animations (press **▶ Play**):\n"
+        "1. **Placing the experts:** the rule fills the GPUs one expert at a time, busiest first, while bars show each "
+        "GPU's busy time growing. You can also pick any step to see the numbers behind that decision.\n"
+        "2. **Running a question:** a real question goes through the 16 layers; the experts it uses light up on their "
+        "GPU and the slowest GPU of each layer turns red, because the others must wait for it.\n\n"
+        "Switch between static, load-balanced and demand-aware to compare. GPU speeds are assumed (simulation).",
+        ("app_pages/gpu_sim.py", "Watch the GPUs at work"))
+
+
 def _random(f):
     v = f["validation"]
     da = v["table"].set_index("strategy").loc["demand_aware"]
@@ -219,6 +231,9 @@ TOPICS = [
     Topic("method", ("method", "methodology", "distribute", "distribution", "algorithm", "how are experts",
                      "placement", "place", "assign", "greedy", "demand-aware", "demand aware"),
           ("How are the experts distributed?", "What is the placement method?"), _method),
+    Topic("visual", ("visual", "visualise", "visualize", "animation", "animate", "watch", "picture", "see the gpus",
+                     "show me the gpus", "gpu simulation", "simulator", "step by step"),
+          ("Can I see the experts being placed on the GPUs?", "Is there a visual simulation?"), _visual),
     Topic("random", ("reliable", "trustworthy", "accurate", "random", "guess", "guessing", "luck", "correct", "proof", "prove", "valid", "trust", "sure",
                      "real result", "chance"),
           ("Is it better than random guessing?", "How do I know the placement is correct?", "Are the results reliable?"), _random),

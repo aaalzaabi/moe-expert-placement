@@ -79,6 +79,7 @@ order in `ui.STORY`). Simulation settings sit in a collapsed "Change the simulat
 | Part 1 · real data | 1. What is inside the model? (`model.py`) | config.json, index.json, phase4f/memory |
 | Part 1 · real data | 2. Which experts are busy? (`routing.py`) | workload_routing / timings (+ new measurement runs) |
 | Part 2 · simulation | 3. Where should experts go? (`placement.py`) | live placement under the session scenario |
+| Part 2 · simulation | 3b. Watch the GPUs at work (`gpu_sim.py`, view model `dashboard/gpu_viz.py`) | animated placement (same order as `placement.assign`) and one real question flowing through the layers; simplified compute-only layer barrier, labelled as such |
 | Part 2 · simulation | 4. How fast would requests run? (`inference.py`) | live event simulation with traces |
 | Part 3 · simulation | 5. Should we move experts? (`migration.py`) | live controller + session-only sandbox |
 | Part 3 · simulation | 6. Does network speed matter? (`network.py`) | saved Phase 4F + optional live fine sweep |

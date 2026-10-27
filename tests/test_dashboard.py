@@ -9,7 +9,7 @@ from streamlit.testing.v1 import AppTest
 
 logging.getLogger("streamlit").setLevel(logging.ERROR)
 APP = str(ROOT / "dashboard" / "app.py")
-PAGES = ["start", "glossary", "assistant_chat", "overview", "demo", "model", "routing", "placement", "inference", "migration", "evaluation", "network",
+PAGES = ["start", "glossary", "assistant_chat", "overview", "demo", "model", "routing", "placement", "gpu_sim", "inference", "migration", "evaluation", "network",
          "findings", "provenance", "multisite"]
 
 

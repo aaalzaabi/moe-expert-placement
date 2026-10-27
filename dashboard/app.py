@@ -28,6 +28,7 @@ pages = {
     ],
     "Part 2 · Placing experts": [
         st.Page("app_pages/placement.py", title="3. Where should experts go?", icon=":material/grid_view:"),
+        st.Page("app_pages/gpu_sim.py", title="3b. Watch the GPUs at work (visual)", icon=":material/play_circle:"),
         st.Page("app_pages/inference.py", title="4. How fast would requests run?", icon=":material/timeline:"),
     ],
     "Part 3 · Moving experts": [

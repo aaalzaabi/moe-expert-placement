@@ -26,6 +26,8 @@ ui.explain(
      "'Workload' is a rough estimate (work ÷ GPU speed), not a real GPU usage %."],
     "Our demand-aware method gives the busiest GPU the least work, so the cluster is better balanced.")
 
+st.page_link("app_pages/gpu_sim.py", label="Prefer pictures? Watch the experts being placed and a question running on the GPUs (visual simulator)", icon=":material/play_circle:")
+
 cfg = ui.scenario()
 
 # ---------------------------------------------------------------- cluster editor

@@ -42,13 +42,13 @@ moeplace/              shared core (no torch): config, data, placement, simulato
                        multisite (sites/replicas/constraints planner), workload (site-aware demand tensor),
                        forecast (forecasters, regret, drift), usecases, agent, scalability
 scripts/               original phase scripts (guarded) + run_experiment.py + profile_routing.py
-dashboard/app.py       12-page Streamlit control center (dashboard/app_pages/*.py, dashboard/ui.py,
+dashboard/app.py       Streamlit control center (dashboard/app_pages/*.py, dashboard/ui.py, gpu_viz.py,
                        dashboard/ms_views.py = view models of the Multi-site page)
 dashboard/legacy_app.py  original single-page dashboard (deprecations fixed)
 outputs/               ORIGINAL results (read-only by convention; scripts refuse to overwrite without --force)
 outputs/runs/          new simulation runs, one folder per run id with metadata.json
 outputs/measurements/  new real profiling runs (created by profile_routing.py)
-tests/                 165 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
+tests/                 171 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
                        multi-site planner, forecasting/regret, agent, scalability, Multi-site page
 docs/                  audit, architecture, methodology, assumptions, demo guide, GPU validation plan
 models/                OLMoE checkpoint (not modified)
@@ -94,7 +94,7 @@ in `moeplace/registry.py` and on the dashboard's *Data provenance* page.
 `.venv/bin/streamlit run dashboard/app.py` opens on **Start here**, a plain-language walkthrough of the project. The
 sidebar then follows the story as 8 numbered steps (real data → placement → moving experts → results), with
 **Presentation mode** for talks and an *Advanced & reference* section (multi-site, technical summary, data sources,
-glossary). Every page begins with an "About this page" box. **Ask the assistant** (and the *Ask a quick question* box in the sidebar) answers questions in plain words from the project's own results; it is an offline lookup assistant, not an AI model. The page **Advanced & reference →
+glossary). **3b. Watch the GPUs at work** animates the placement rule filling the GPUs and a real question running through the 16 layers. Every page begins with an "About this page" box. **Ask the assistant** (and the *Ask a quick question* box in the sidebar) answers questions in plain words from the project's own results; it is an offline lookup assistant, not an AI model. The page **Advanced & reference →
 Multi-site, forecasting & agent** has a use-case selector and six tabs:
 
 | Tab | Shows | Interactive |
@@ -118,7 +118,7 @@ pressed, in memory. The dashboard never loads OLMoE and never writes files (both
 * `.github/workflows/ci.yml` runs on every push and pull request: Python 3.11, installs `requirements-ci.txt`
   (streamlit, plotly, pandas, numpy; no torch, no model download), then runs the full unittest suite and the
   reproduction tests.
-* Status: these exact steps pass locally in a clean clone with a fresh virtual environment (165 tests). The workflow
+* Status: these exact steps pass locally in a clean clone with a fresh virtual environment (171 tests). The workflow
   has **not** run on GitHub yet: no remote is configured. To enable it:
 
 ```bash

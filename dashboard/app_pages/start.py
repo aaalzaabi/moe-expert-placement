@@ -90,6 +90,7 @@ with st.container(border=True):
              f"On questions it had **not** seen before, the busiest GPU's workload drops by **{cut:.0f}%**. "
              "*(Simulation with assumed GPU speeds — not a real GPU test.)*",
              "app_pages/placement.py", "Try the placement planner")
+        st.page_link("app_pages/gpu_sim.py", label="Watch it happen: visual GPU simulator", icon=":material/play_circle:")
     with b:
         labels = {"static": "Simple (static)", "balanced": "Balanced only", "demand_aware": "Our method"}
         fig = go.Figure(go.Bar(x=[labels[s] for s in held.index], y=held.peak_test_load,
