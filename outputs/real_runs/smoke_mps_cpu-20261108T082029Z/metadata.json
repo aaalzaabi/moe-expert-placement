@@ -1,0 +1,57 @@
+{
+  "kind": "measured",
+  "what": "real expert-parallel execution of OLMoE across devices",
+  "model": "allenai/OLMoE-1B-7B-0125-Instruct",
+  "devices": [
+    {
+      "device": "mps:0",
+      "name": "mps"
+    },
+    {
+      "device": "cpu",
+      "name": "cpu"
+    }
+  ],
+  "gateway": "mps:0",
+  "dtype": "bfloat16",
+  "speeds_used": [
+    15.641587799327116,
+    1.0
+  ],
+  "speed_benchmark_seconds": [
+    0.00014311526610981672,
+    0.0022385500002807626
+  ],
+  "strategies": [
+    "static",
+    "balanced",
+    "demand_aware"
+  ],
+  "warmup": 1,
+  "repeats": 1,
+  "prompts": [
+    "Explain mixture-of-experts models.",
+    "How does GPU parallelism work?",
+    "Write a Python sorting function.",
+    "Explain how to optimize a database query.",
+    "Why is the sky blue?",
+    "How do airplanes navigate?"
+  ],
+  "train_ids": [
+    0,
+    2,
+    4
+  ],
+  "test_ids": [
+    1,
+    3,
+    5
+  ],
+  "model_load_seconds": 0.8171253749751486,
+  "created_utc": "20261108T082029Z",
+  "torch": "2.14.1",
+  "cuda": null,
+  "platform": "macOS-15.7.9-arm64-arm-64bit",
+  "command": "scripts/run_real_expert_parallel.py --devices mps,cpu --warmup 1 --repeats 1 --check --name smoke_mps_cpu",
+  "limitations": "Prefill only, batch size 1. Simple per-layer dispatch loop: kernel launches are asynchronous so GPUs can overlap, but there are no custom streams or fused all-to-all. Attention, router, embeddings and LM head stay on the gateway GPU. Speeds used by the planner are from a short micro-benchmark or assumed equal, as recorded below."
+}

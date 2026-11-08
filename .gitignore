@@ -17,3 +17,6 @@ outputs/runs/.partial-*/
 # Local editor/agent tooling (symlinks into .venv)
 .claude/
 .agents/
+
+# Proposal document stays local (not published)
+docs/proposal/

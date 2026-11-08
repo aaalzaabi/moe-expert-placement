@@ -9,7 +9,7 @@ from streamlit.testing.v1 import AppTest
 
 logging.getLogger("streamlit").setLevel(logging.ERROR)
 APP = str(ROOT / "dashboard" / "app.py")
-PAGES = ["start", "my_prompt", "glossary", "assistant_chat", "overview", "demo", "model", "routing", "placement", "gpu_sim", "inference", "migration", "evaluation", "network",
+PAGES = ["welcome", "present", "agent_visual", "start", "my_prompt", "glossary", "assistant_chat", "overview", "demo", "model", "routing", "placement", "gpu_sim", "inference", "migration", "evaluation", "network",
          "findings", "provenance", "multisite"]
 
 
@@ -22,7 +22,7 @@ class TestDashboardSmoke(unittest.TestCase):
     def test_entrypoint_renders_default_page(self):
         at = AppTest.from_file(APP, default_timeout=120).run()
         self.assertFalse(at.exception, [e.value for e in at.exception])
-        self.assertEqual(at.title[0].value, "Start here")
+        self.assertEqual(at.title[0].value, "Where should the experts live?")
 
     def test_every_page_renders_without_exception(self):
         for page in PAGES:
@@ -168,6 +168,9 @@ class TestMyPrompt(unittest.TestCase):
         at = AppTest.from_file(APP, default_timeout=120).run()
         at.session_state["mp_result"] = fake
         at.switch_page("app_pages/my_prompt.py").run()
+        self.assertFalse(at.exception, [str(e.value)[:400] for e in at.exception])
+        self.assertTrue(any("earlier run" in e.value for e in at.info))
+        at.toggle(key="mp_explore").set_value(True).run()
         self.assertFalse(at.exception, [str(e.value)[:400] for e in at.exception])
         labels = [m.label for m in at.metric]
         self.assertIn("Demand-aware · total time", labels)

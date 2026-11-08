@@ -9,21 +9,10 @@ import live_model as LM
 import ui
 from ui import C, D
 
-ui.page_header("Try your own prompt",
-               "Type any question, run it through the real OLMoE model, see which experts it uses, and watch how the "
-               "simulated GPUs would handle it.", ("measured", "live"))
-ui.explain(
-    "Until now the project used 6 fixed questions. Here you can test **your own prompt**:\n\n"
-    "1. The real OLMoE model reads your prompt once. Its router picks **8 of the 64 experts** for every word "
-    "(token) in each of the 16 layers. This part is **real** and measured on this Mac.\n"
-    "2. Those experts then light up on the **simulated GPUs**, placed by each method from page 3, to show which GPU "
-    "would be the bottleneck. This part is **simulated** with assumed GPU speeds.",
-    ["The first run loads the model (about 10–60 seconds, about 15 GB of memory). Later prompts take seconds.",
-     "**Heatmap:** rows are layers, columns are experts; brighter = chosen more often by your prompt.",
-     "**GPU picture:** press ▶ Play to go layer by layer. Red bar = the slowest GPU, which the others wait for.",
-     "The placement was planned from the 3 training questions only, so your prompt is a fresh test of it."],
-    "Your prompt is a new, unseen test: if demand-aware still gives the lowest total time, the plan generalises "
-    "beyond the questions it was built from.")
+st.title("Try your own prompt")
+st.markdown("Ask OLMoE a question. **Its written answer appears below**. You can then explore which experts handled your input.")
+st.caption("The model runs locally when you press Run. First use loads the checkpoint; longer answers take more time.")
+st.caption("Answer context: AI and Mixture-of-Experts. Specify another field if an abbreviation has a different meaning.")
 
 cfg = ui.scenario()
 cfg_json = ui.cfg_key(cfg)
@@ -32,7 +21,8 @@ EXAMPLES = ["What is the capital of France?", "Write a Python function that reve
 
 
 @st.cache_resource(show_spinner=False, max_entries=1)
-def real_model() -> LM.Loaded:
+def real_model(api_version: str = "answer-v1") -> LM.Loaded:
+    """Versioned resource so routing-only cached model instances are not reused."""
     return LM.load("bfloat16")
 
 
@@ -49,14 +39,18 @@ def use_example():
 
 
 # ---------------------------------------------------------------- input
+st.session_state.setdefault("mp_text", getattr(st.session_state.get("mp_answer"), "prompt", ""))
 with st.container(border=True):
     st.pills("Need an idea? Pick an example", EXAMPLES, key="mp_example", on_change=use_example)
     with st.form("mp_form", border=False):
         text = st.text_area("Your prompt", key="mp_text", max_chars=1000, height=90,
                             placeholder="e.g. How do airplanes stay in the air?")
+        answer_length = st.selectbox("Answer length", [64, 128, 256], index=1, key="mp_length",
+                                     format_func=lambda n: {64: "Short · up to 64 tokens", 128: "Standard · up to 128 tokens", 256: "Longer · up to 256 tokens"}[n])
         submitted = st.form_submit_button("Run on the real model", icon=":material/play_arrow:", type="primary")
     model_note = st.empty()  # filled below, after a run may have loaded the model
 loaded = st.session_state.get("mp_loaded", False)
+run_error = None
 
 if submitted:
     if not text.strip():
@@ -64,25 +58,68 @@ if submitted:
     elif not LM.checkpoint_present():
         st.error("The OLMoE checkpoint folder is missing, so the real model cannot run here.", icon=":material/error:")
     else:
+        st.session_state.pop("mp_result", None)
+        st.session_state.pop("mp_answer", None)
+        st.session_state.pop("mp_tok", None)
         with st.status("Running the real OLMoE model…", expanded=True) as status:
-            if not loaded:
-                status.write("Loading the model from disk (first time only)…")
-            m = real_model()
-            st.session_state.mp_loaded = True
-            status.write(f"Model ready on **{m.device}** ({m.dtype}). Reading your prompt…")
-            result = LM.route(m, text)
-            status.update(label=f"Done: {len(result.tokens)} tokens in {result.forward_seconds:.2f} s",
-                          state="complete", expanded=False)
-        st.session_state.mp_result = result
+            try:
+                if not loaded:
+                    status.write("Loading the model from the local checkpoint…")
+                m = real_model("answer-v1")
+                st.session_state.mp_loaded = True
+                status.write("Writing your answer…")
+                answer = LM.generate(m, text, max_new_tokens=answer_length)
+                st.session_state.mp_answer = answer
+                status.write("Recording which experts processed your input…")
+                result = LM.route(m, text)
+                st.session_state.mp_result = result
+                status.update(label="Answer ready — scroll below to read it", state="complete", expanded=False)
+            except Exception as exc:
+                status.update(label="The run could not finish", state="error", expanded=False)
+                run_error = str(exc)
 
-model_note.caption(("Model is loaded: runs take a few seconds." if st.session_state.get("mp_loaded") else
+if run_error:
+    st.error(f"OLMoE could not complete the run: {run_error}. Try a shorter prompt or unload the model and retry.")
+
+
+model_note.caption(("Model is loaded. Longer answers take more time." if st.session_state.get("mp_loaded") else
                     "The model is not loaded yet. The first run loads it (about 10–60 seconds, about 15 GB of memory).")
                    + f" Prompts longer than {LM.MAX_TOKENS} tokens are cut. Nothing is saved to disk.")
 
+answer: LM.Generated | None = st.session_state.get("mp_answer")
 result: LM.Routed | None = st.session_state.get("mp_result")
+if answer is not None:
+    st.subheader("Model’s answer")
+    if getattr(answer, "context", None) != LM.ANSWER_CONTEXT:
+        st.info("This answer used earlier settings. Press Run again to use the AI-project context.")
+    st.caption(f"For your question: {answer.prompt}")
+    with st.container(border=True):
+        if answer.text:
+            st.markdown(answer.text)
+        else:
+            st.info("The model ended without producing visible text. Try rephrasing your question.")
+    st.caption(f"Generated by OLMoE locally · {answer.output_tokens} output tokens · {answer.seconds:.2f} s for generation. "
+               "This is separate from the routing measurement below.")
+    if answer.hit_limit:
+        st.info("The answer reached the selected length limit and may end mid-sentence. Select a longer answer and run again.")
+elif result is not None:
+    st.info("This session contains routing from an earlier run. Press Run again to generate a written answer too.")
+else:
+    st.info("Type your question above and press Run. The model’s answer will appear here.", icon=":material/keyboard:")
+
+if st.session_state.get("mp_loaded") and st.button("Unload the model (free memory)", key="mp_unload", icon=":material/eject:"):
+    real_model.clear()
+    LM.unload()
+    st.session_state.mp_loaded = False
+    st.rerun()
+
 if result is None:
-    st.info("Type a prompt above and press **Run on the real model** to see the results here.",
-            icon=":material/keyboard:")
+    st.stop()
+
+explore = st.toggle("See how the experts handled it", key="mp_explore", value=False)
+st.caption("These charts trace a separate pass over your raw input prompt, without the answer's AI-context instruction. "
+           "They do not trace the generated answer or its decoding.")
+if not explore:
     st.stop()
 
 # ---------------------------------------------------------------- 1. real routing
@@ -94,7 +131,7 @@ unseen = int((train.reindex(pd.MultiIndex.from_frame(used[["layer_id", "expert_i
 st.subheader(f"Your prompt: “{result.prompt[:120]}{'…' if len(result.prompt) > 120 else ''}”")
 with st.container(horizontal=True):
     st.metric("Tokens (word pieces)", len(result.tokens), border=True)
-    st.metric("Model run time", f"{result.forward_seconds:.2f} s", border=True,
+    st.metric("Input routing time", f"{result.forward_seconds:.2f} s", border=True,
               help=f"Measured: one forward pass on this Mac ({result.device}, {result.dtype}). Single device, "
                    "not a multi-GPU time.")
     st.metric("Different experts used", f"{len(used)} of 1,024", border=True)
@@ -165,13 +202,4 @@ st.caption("Real: which experts your prompt used and the model run time on this 
            "speeds and every time on the GPU picture. The model runs in BF16 here (the saved Phase 2 data used FP32), "
            "so in rare near-ties an expert choice can differ: on question 1 it matched 891 of the 896 saved choices.")
 
-c1, c2 = st.columns(2)
-with c1:
-    if st.session_state.get("mp_loaded") and st.button("Unload the model (free memory)", icon=":material/eject:"):
-        real_model.clear()
-        LM.unload()
-        st.session_state.mp_loaded = False
-        st.rerun()
-with c2:
-    st.page_link("app_pages/gpu_sim.py", label="Compare with the saved questions on the visual simulator",
-                 icon=":material/play_circle:")
+st.page_link("app_pages/gpu_sim.py", label="Compare with saved questions on the GPU animations", icon=":material/play_circle:")

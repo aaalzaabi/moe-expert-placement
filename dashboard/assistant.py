@@ -37,7 +37,7 @@ def _project(f):
         "them.** It runs the real OLMoE model to measure which of its 1,024 experts are used most, then — in a "
         "simulation — places the experts on GPUs so no GPU is overloaded, and uses a controller to decide whether "
         f"rearranging them is worth the copying cost. Main result: the busiest GPU's load drops by about "
-        f"**{f['cut']:.0f}%** (simulation).", ("app_pages/start.py", "Start here"))
+        f"**{f['cut']:.0f}%** (simulation).", ("app_pages/welcome.py", "Welcome"))
 
 
 def _moe(f):
@@ -61,7 +61,7 @@ def _method(f):
 
 def _visual(f):
     return Answer(
-        "Open **3b. Watch the GPUs at work (visual)**. It draws each simulated GPU as a grid of 256 slots and has two "
+        "Open **GPU animations** under **Research tools** (or scene 3 of **Guided story**). It draws each simulated GPU as a grid of 256 slots and has two "
         "animations (press **▶ Play**):\n"
         "1. **Placing the experts:** the rule fills the GPUs one expert at a time, busiest first, while bars show each "
         "GPU's busy time growing. You can also pick any step to see the numbers behind that decision.\n"
@@ -73,11 +73,11 @@ def _visual(f):
 
 def _my_prompt(f):
     return Answer(
-        "Open **Try your own prompt** (top of the sidebar). Type any question and press **Run on the real model**: "
-        "the real OLMoE model reads it and records which 8 of 64 experts each word uses in every layer. Those experts "
-        "then light up on the simulated GPUs for each placement method, so you can see whether our plan, built from "
-        "3 training questions, still works on your prompt. The first run loads the model (about 10–60 seconds, "
-        "about 15 GB of memory); after that each prompt takes seconds. Nothing is saved to disk.",
+        "Open **Try your own prompt**. Type a question and press **Run on the real model**. Read the response under "
+        "**Model’s answer**. You can choose up to 64, 128 or 256 output tokens; longer answers take more time. "
+        "Then turn on **See how the experts handled it** to inspect real routing from a separate input pass and "
+        "watch those experts on the simulated GPUs. These charts do not trace the generated answer's decode tokens. "
+        "The first run loads the local checkpoint; later runs reuse it. Use **Unload the model** when finished.",
         ("app_pages/my_prompt.py", "Try your own prompt"))
 
 
@@ -194,17 +194,20 @@ def _migration_cost(f):
 
 def _use(f):
     return Answer(
-        "Start with **Start here**, then follow the numbered pages 1–8 in the sidebar using the *Next* links at the "
-        "bottom of each page. Every page opens with an **About this page** box. Settings are optional (in *Change "
-        "the simulated setup*). For a talk, use **Presentation mode**. Unknown words: **Glossary**.",
-        ("app_pages/start.py", "Start here"))
+        "Open **Welcome**, then press **Start the presentation**. The **Guided story** explains the project in six "
+        "scenes with one picture per scene and Back/Next buttons. **Try your own prompt** runs real routing when "
+        "you press its button. **See the agent decide** runs a simulated operations cycle. Switch on **Research tools** "
+        "to see the complete experiments; the detailed charts and glossary remain available there.",
+        ("app_pages/welcome.py", "Welcome"))
 
 
 def _present(f):
     return Answer(
-        "Use **Presentation mode** (second item in the sidebar): 10 steps, about 9 minutes, with talking points for "
-        "each. Optional live moment: on page 5 click *Approve (override)* and watch the move happen, then try "
-        "*Inject copy failure* to show the rollback. See docs/DEMO_GUIDE.md.", ("app_pages/demo.py", "Presentation mode"))
+        "Use **Guided story**: six scenes, about 7–10 minutes. Show the experts, measured demand, animated GPU "
+        "placement, migration costs, the operations agent and the findings. Each scene has a takeaway and optional "
+        "presenter notes. For a live moment, open **See the agent decide** and run a GPU-failure scenario. "
+        "The original ten-step demo is still available under Research tools.",
+        ("app_pages/present.py", "Guided story"))
 
 
 def _run(f):

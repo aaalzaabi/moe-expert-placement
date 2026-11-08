@@ -74,7 +74,7 @@ class TestCheckpointFacts(unittest.TestCase):
 class TestProvenance(unittest.TestCase):
     def test_every_original_csv_has_provenance(self):
         on_disk = {str(p.relative_to(OUTPUTS)) for p in OUTPUTS.rglob("*.csv")
-                   if not p.relative_to(OUTPUTS).parts[0] in ("runs", "measurements")}
+                   if not p.relative_to(OUTPUTS).parts[0] in ("runs", "measurements", "real_runs")}
         self.assertEqual(on_disk - set(BY_PATH), set(), "CSV without a provenance entry")
 
     def test_kinds_are_known(self):

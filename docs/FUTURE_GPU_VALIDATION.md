@@ -3,6 +3,19 @@
 Status: nothing in this project has been run on NVIDIA hardware. The steps below turn each hypothetical
 parameter into a measurement and then test the planner's predictions against real serving.
 
+## Start with the available NVIDIA machine
+
+Run `python3 scripts/check_gpu.py` in that machine's Python environment. The script is also standalone and can
+be copied without the rest of the project. It reports GPU names, total/free memory (GiB), driver, installed
+packages and whether PyTorch can access CUDA. `--json` prints structured details; `--checkpoint /local/path`
+optionally inspects existing checkpoint metadata. It does not download a model, install packages or run inference.
+Exit 0 means CUDA is accessible; exit 2 means access or environment setup still needs attention.
+
+With one physical GPU, collect real routing, expert-compute and memory measurements and use them to calibrate
+the simulator. This does not validate concurrent execution or migration across physical GPUs. With multiple
+accessible GPUs, a separate expert-parallel execution adapter and communication tests are also needed. Report
+each measurement's device, precision, workload, warm-up, repetitions and code/data versions.
+
 ## 1. Calibrate the simulator's parameters
 
 | Parameter (now hypothetical) | How to measure | Target hardware |

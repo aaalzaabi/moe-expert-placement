@@ -17,7 +17,7 @@ cd ~/Desktop/MOE/moe-expert-placement
 # Dashboard (loads the model only if you press 'Run on the real model' on 'Try your own prompt')
 .venv/bin/streamlit run dashboard/app.py
 
-# Test suite (stdlib unittest; ~5 s)
+# Test suite (stdlib unittest; ~25 s)
 .venv/bin/python -m unittest discover -s tests -t .
 
 # Multi-site planner, forecasting, regret, agent and use cases (feedback response; ~2 min)
@@ -48,7 +48,7 @@ dashboard/legacy_app.py  original single-page dashboard (deprecations fixed)
 outputs/               ORIGINAL results (read-only by convention; scripts refuse to overwrite without --force)
 outputs/runs/          new simulation runs, one folder per run id with metadata.json
 outputs/measurements/  new real profiling runs (created by profile_routing.py)
-tests/                 175 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
+tests/                 183 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
                        multi-site planner, forecasting/regret, agent, scalability, Multi-site page
 docs/                  audit, architecture, methodology, assumptions, demo guide, GPU validation plan
 models/                OLMoE checkpoint (not modified)
@@ -91,11 +91,24 @@ in `moeplace/registry.py` and on the dashboard's *Data provenance* page.
 
 ## Dashboard
 
-`.venv/bin/streamlit run dashboard/app.py` opens on **Start here**, a plain-language walkthrough of the project. The
-sidebar then follows the story as 8 numbered steps (real data → placement → moving experts → results), with
-**Presentation mode** for talks and an *Advanced & reference* section (multi-site, technical summary, data sources,
-glossary). **3b. Watch the GPUs at work** animates the placement rule filling the GPUs and a real question running through the 16 layers. The dashboard opens in a **simple view**: each page shows its key takeaway and main chart, and extra charts and tables sit in collapsed *More detail* sections. The sidebar switch **Show all details** shows everything and lists the reference pages. **Ask the assistant** (and the *Ask a quick question* box in the sidebar) answers questions in plain words from the project's own results; it is an offline lookup assistant, not an AI model. The page **Advanced & reference →
-Multi-site, forecasting & agent** has a use-case selector and six tabs:
+`.venv/bin/streamlit run dashboard/app.py` opens on **Welcome**. The default menu has five choices:
+**Welcome**, **Guided story**, **Try your own prompt**, **See the agent decide**, and **Ask the assistant**.
+
+* **Guided story** is a six-scene presentation (7–10 minutes): experts → measured demand → animated placement →
+  migration decision → operations agent → findings. Each scene has one main visual, a takeaway and optional presenter notes.
+  It uses the fixed default hardware scenario, and the migration scene explicitly uses the saved Phase 4E preset.
+* **Try your own prompt** generates a written OLMoE answer first (select up to 64, 128 or 256 output tokens).
+  Answers receive a visible AI/MoE system context to disambiguate terms such as LLM; explicit other-topic questions remain supported.
+  A **See how the experts handled it** toggle reveals measured input routing and simulated GPU animations.
+  Routing is a separate raw-input prefill pass; it does not trace the generated answer's decode tokens.
+* **See the agent decide** runs the existing operations agent one simulated hour per click for GPU failure,
+  a demand shift or residency. Five stages show observation, forecast, proposal, rule checks and action/learning.
+  Approval is held for a person when required, with approve/deny actions and a tool/audit trail.
+* **Research tools** reveals every original page, including the detailed multi-site experiments and the original
+  ten-step demo. **Show all details** inside the sidebar settings expands secondary content on research pages.
+* **Ask the assistant** is an offline lookup helper, separate from both the real OLMoE model and the operations agent.
+
+The research page **Multi-site experiments** has a use-case selector and six tabs:
 
 | Tab | Shows | Interactive |
 |---|---|---|
@@ -107,7 +120,7 @@ Multi-site, forecasting & agent** has a use-case selector and six tabs:
 | Governance & safety | compliance per use case, residency, approval rules, risk register, audit trail, blocked reasons | — |
 
 Default views read saved runs (`outputs/runs/usecases-*`, `scalability-*`); computations run only when a button is
-pressed, in memory. The dashboard never writes files, and it loads OLMoE only when a user presses **Run on the real model** on **Try your own prompt** (BF16 on the Mac's GPU, about 15 GB peak; first prompt ≈ 4 s, then ≈ 0.3 s; *Unload the model* frees it). Every other page, and the whole test suite, runs without torch (tested). Demo script:
+pressed, in memory. The dashboard never writes files, and it loads OLMoE only when a user presses **Run on the real model** on **Try your own prompt** (BF16 on the Mac's GPU, about 15 GB peak; generation time depends on answer length; *Unload the model* frees it). Every other page, and the whole test suite, runs without torch (tested). Demo script:
 `docs/DEMO_GUIDE.md`.
 
 ## Version control and CI
@@ -118,8 +131,9 @@ pressed, in memory. The dashboard never writes files, and it loads OLMoE only wh
 * `.github/workflows/ci.yml` runs on every push and pull request: Python 3.11, installs `requirements-ci.txt`
   (streamlit, plotly, pandas, numpy; no torch, no model download), then runs the full unittest suite and the
   reproduction tests.
-* Status: these exact steps pass locally in a clean clone with a fresh virtual environment (175 tests). The workflow
-  has **not** run on GitHub yet: no remote is configured. To enable it:
+* Status: the current full suite passes locally (183 tests). The earlier 175-test suite also passed in a clean
+  clone with a fresh environment containing only CI dependencies. The workflow has **not** run on GitHub yet:
+  no remote is configured. To enable it:
 
 ```bash
 git remote add origin https://github.com/<you>/moe-expert-placement.git

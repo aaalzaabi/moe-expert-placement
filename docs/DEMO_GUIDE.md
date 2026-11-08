@@ -4,13 +4,38 @@
 
 ```bash
 cd ~/Desktop/MOE/moe-expert-placement
-.venv/bin/python -m unittest discover -s tests -t .     # optional: shows 90 tests passing
+.venv/bin/python -m unittest discover -s tests -t .     # optional: runs the automated test suite
 .venv/bin/streamlit run dashboard/app.py                # opens http://localhost:8501
 ```
 
-The demo needs no model loading and no internet. Open **Presentation mode** (second item in the sidebar) and use **Next/Back**. To explain the project without presenting, use **Start here**.
-Each step shows one visual from saved results, three talking points and a one-line takeaway. The link at the
-bottom opens the full interactive page if the professor asks a question.
+## Recommended presentation: six scenes
+
+Open **Welcome → Start the presentation**. The **Guided story** needs no model loading or internet. Use the
+**Next / Back** buttons. Each scene has one main visual and a takeaway; **Presenter notes — what to say** contains
+speaking guidance and a link to the underlying experiment. The sidebar shows only five presentation choices until
+**Research tools** is enabled.
+
+1. **Meet the experts (~1 min).** Explain a router selecting 8 of 64 experts, repeated across 16 layers.
+2. **See uneven demand (~1 min).** Show measured expert-selection counts from six real prompts. Only three prompts
+   train the placement; three are held out.
+3. **Place them on GPUs (~2 min).** Press Play; compare simple and demand-aware placement. Every square is a
+   real expert identity, but the GPUs and speeds are simulated. Bars are load proxies, not milliseconds.
+4. **Check the cost of moving (~1 min).** Explain the saved controller's rejection: the forecast p95 regression
+   exceeds the 0% limit despite a makespan gain. This scene is explicitly the 8 MB / 12 GB/s legacy experiment.
+5. **Meet the agent (~2 min).** Show the loop. Optionally open **See the agent decide**, choose GPU failure and
+   press **Run the agent**. The agent restores a simulated plan. Select Observe / Forecast / Propose / Check /
+   Act & learn to explain its tools. For human approval, select Data must stay local and run two hours: the second
+   cycle waits for approval; approve or deny before continuing. Start again resets only that scenario's session state.
+6. **What we learned (~1 min).** Summarise the held-out comparison, the six-prompt limitation and future hardware validation.
+
+Optional live model moment: **Try your own prompt** → type a short question → **Run on the real model**. Read
+**Model’s answer** first, then turn on **See how the experts handled it**. The answer uses the checkpoint's chat
+format; routing is a separate raw-input pass and the pictures do not trace generation. Select a longer answer if the
+length limit cuts it off. This is the only part of the demo that loads the model. **Unload the model** frees it.
+
+## Original ten-step presentation (retained)
+
+Enable **Research tools → Original ten-step demo**. The earlier script below remains available as a detailed alternative.
 
 ## Script
 

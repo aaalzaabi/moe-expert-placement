@@ -67,19 +67,35 @@ flowchart LR
 Plotly dark template, provenance badges, `st.cache_data` loaders and cached simulations keyed by the full
 config JSON. Theme: `dashboard/.streamlit/config.toml` (script-level config, applies from any launch directory).
 
-The pages follow one story, numbered in the sidebar. Every page opens with an "About this page" box
-(what it shows, how to read it, key takeaway; `ui.explain`) and ends with previous/next links (`ui.step_footer`,
-order in `ui.STORY`). Simulation settings sit in a collapsed "Change the simulated setup" panel.
+The dashboard now opens on `welcome.py` with five visible destinations: Welcome, Guided story, Try your own prompt,
+See the agent decide and Ask the assistant. `present.py` is a six-scene, one-visual-at-a-time walkthrough using saved
+measurements and the existing GPU visualiser. `agent_visual.py` calls the same `ms_views.run_agent_cycles()` as the
+multi-site research page, with separate per-scenario state (`av_states`), no background execution and the existing
+approval gate. It commits new cycles only after success and immediately disables further cycles while approval is pending.
+All old pages remain registered and linkable; the **Research tools** toggle reveals them in the menu. **Show all details**
+in sidebar settings expands secondary charts on research pages. `ui.explain` and `ui.step_footer` still support those pages.
+
+`my_prompt.py` caches a versioned model resource and calls `live_model.generate()` only on form submission. Generation
+uses the local instruction chat template with a visible AI/MoE system instruction (LLM defaults to large language model),
+greedy decoding, KV caching and a bounded output length. Explicitly specified other domains remain allowed. `live_model.route()`
+then measures a separate raw-input prefill. `Generated` and `Routed` are stored in session state, so opening charts never
+reruns inference. The cached model has an inference lock for concurrent callers. The answer is visible first; charts are
+explicitly opt-in and do not claim to cover decode routing. User-facing errors are shown outside the collapsed status box.
+
+The following registry includes the original research pages (now under Research tools):
 
 | Sidebar section | Page (file) | Data |
 |---|---|---|
-| — | Start here (`start.py`, default) | five-step plain-language story from saved files |
+| Presentation | Welcome (`welcome.py`, default) | clear entry point and one primary presentation button |
+| Presentation | Guided story (`present.py`) | six scenes; saved evidence, fixed and labelled presets |
+| Presentation | See the agent decide (`agent_visual.py`) | live simulated cycles using the existing agent and approval gate |
+| — | Project overview (`start.py`, research) | five-step plain-language story from saved files |
 | — | Presentation mode (`demo.py`) | 10-step guided demo, saved files only |
 | — | Ask the assistant (`assistant_chat.py`) | offline Q&A engine `dashboard/assistant.py` (topic + glossary matching, live facts from `ui.assistant_facts`); also a sidebar quick-ask popover |
 | Part 1 · real data | 1. What is inside the model? (`model.py`) | config.json, index.json, phase4f/memory |
 | Part 1 · real data | 2. Which experts are busy? (`routing.py`) | workload_routing / timings (+ new measurement runs) |
 | Part 2 · simulation | 3. Where should experts go? (`placement.py`) | live placement under the session scenario |
-| Top | Try your own prompt (`my_prompt.py`, `dashboard/live_model.py`) | the only page that runs OLMoE: on button press, loads the local checkpoint in BF16 (never downloads), records the user's prompt's top-8 routing per layer (real), and replays it on the simulated GPUs for each placement (simulated). Nothing written to disk |
+| Top | Try your own prompt (`my_prompt.py`, `dashboard/live_model.py`) | the only page that runs OLMoE: on button press, loads the local checkpoint in BF16 (never downloads), records the user's prompt's top-8 routing per layer (real), generates a written answer and replays input routing on the simulated GPUs for each placement (simulated). Nothing written to disk |
 | Part 2 · simulation | 3b. Watch the GPUs at work (`gpu_sim.py`, view model `dashboard/gpu_viz.py`) | animated placement (same order as `placement.assign`) and one real question flowing through the layers; simplified compute-only layer barrier, labelled as such |
 | Part 2 · simulation | 4. How fast would requests run? (`inference.py`) | live event simulation with traces |
 | Part 3 · simulation | 5. Should we move experts? (`migration.py`) | live controller + session-only sandbox |
