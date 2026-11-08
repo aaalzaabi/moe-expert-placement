@@ -99,6 +99,19 @@ class Authoriser:
         return ok, needs_human, reasons
 
 
+def residency_touched(base_topo: M.Topology, cur_plan: M.Plan, cur_topo: M.Topology,
+                      new_plan: M.Plan, new_topo: M.Topology) -> bool:
+    """True if going from cur_plan to new_plan changes which experts are hosted on any device of a residency site."""
+    res = set(base_topo.residency_sites())
+    if not res:
+        return False
+    cur = {d.name: cur_plan.hosts[:, i] for i, d in enumerate(cur_topo.devices) if d.site in res}
+    for j, d in enumerate(new_topo.devices):
+        if d.site in res and (d.name not in cur or (cur[d.name] != new_plan.hosts[:, j]).any()):
+            return True
+    return False
+
+
 def auto_approver(proposal: Proposal) -> tuple[bool, str]:
     """Stand-in for a human approver in simulation: approves and says so in the audit log."""
     return True, "simulated human approval (auto)"
@@ -179,15 +192,7 @@ class PlacementAgent:
         return not any(d.name in self.failed for d in self.topo.devices)
 
     def _residency_touched(self, plan_n: M.Plan, topo_n: M.Topology) -> bool:
-        """True if the proposal changes which experts are hosted on any device of a residency site."""
-        res = set(self.base_topo.residency_sites())
-        if not res:
-            return False
-        cur = {d.name: self.plan.hosts[:, i] for i, d in enumerate(self.topo.devices) if d.site in res}
-        for j, d in enumerate(topo_n.devices):
-            if d.site in res and (d.name not in cur or (cur[d.name] != plan_n.hosts[:, j]).any()):
-                return True
-        return False
+        return residency_touched(self.base_topo, self.plan, self.topo, plan_n, topo_n)
 
     def _consolidation_options(self, yhat):
         """Smallest set of switched-off devices (slowest first, per site) whose forecast J stays <= target."""

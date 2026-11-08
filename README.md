@@ -17,7 +17,11 @@ cd ~/Desktop/MOE/moe-expert-placement
 # Dashboard (loads the model only if you press 'Run on the real model' on 'Try your own prompt')
 .venv/bin/streamlit run dashboard/app.py
 
-# Test suite (stdlib unittest; ~25 s)
+# Planner API (FastAPI + SQLite by default; docs at http://localhost:8000/docs)
+.venv/bin/uvicorn service.app:create_app --factory --port 8000
+curl -s -X POST localhost:8000/proposals -H 'Content-Type: application/json' -d @examples/scenario.json
+
+# Test suite (stdlib unittest; ~30 s)
 .venv/bin/python -m unittest discover -s tests -t .
 
 # Multi-site planner, forecasting, regret, agent and use cases (feedback response; ~2 min)
@@ -41,6 +45,9 @@ cd ~/Desktop/MOE/moe-expert-placement
 moeplace/              shared core (no torch): config, data, placement, simulator, policy, experiment, registry,
                        multisite (sites/replicas/constraints planner), workload (site-aware demand tensor),
                        forecast (forecasters, regret, drift), usecases, agent, scalability
+service/               planner API (FastAPI) + database (SQLAlchemy: SQLite or PostgreSQL): settings, schemas,
+                       planning (adapter over moeplace), workflow (proposal lifecycle, transactions), db, app
+examples/scenario.json three-site request for the API (sites, devices, demand per 15-minute window)
 scripts/               original phase scripts (guarded) + run_experiment.py + profile_routing.py
 dashboard/app.py       Streamlit control center (dashboard/app_pages/*.py, dashboard/ui.py, gpu_viz.py,
                        dashboard/ms_views.py = view models of the Multi-site page)
@@ -48,8 +55,9 @@ dashboard/legacy_app.py  original single-page dashboard (deprecations fixed)
 outputs/               ORIGINAL results (read-only by convention; scripts refuse to overwrite without --force)
 outputs/runs/          new simulation runs, one folder per run id with metadata.json
 outputs/measurements/  new real profiling runs (created by profile_routing.py)
-tests/                 183 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
-                       multi-site planner, forecasting/regret, agent, scalability, Multi-site page
+tests/                 212 tests: reproduction, invariants, leakage, schemas, runner, dashboard,
+                       multi-site planner, forecasting/regret, agent, scalability, Multi-site page,
+                       planner API + database (tests/test_service.py)
 docs/                  audit, architecture, methodology, assumptions, demo guide, GPU validation plan
 models/                OLMoE checkpoint (not modified)
 ```
@@ -129,16 +137,10 @@ pressed, in memory. The dashboard never writes files, and it loads OLMoE only wh
   resume files; only `config.json` and `model.safetensors.index.json` from the checkpoint are tracked, because tests
   and the dashboard read them.
 * `.github/workflows/ci.yml` runs on every push and pull request: Python 3.11, installs `requirements-ci.txt`
-  (streamlit, plotly, pandas, numpy; no torch, no model download), then runs the full unittest suite and the
-  reproduction tests.
-* Status: the current full suite passes locally (183 tests). The earlier 175-test suite also passed in a clean
-  clone with a fresh environment containing only CI dependencies. The workflow has **not** run on GitHub yet:
-  no remote is configured. To enable it:
-
-```bash
-git remote add origin https://github.com/<you>/moe-expert-placement.git
-git push -u origin main      # CI then runs under the repository's Actions tab
-```
+  (streamlit, plotly, pandas, numpy, fastapi, sqlalchemy; no torch, no model download), then runs the full
+  unittest suite and the reproduction tests.
+* Repository: https://github.com/aaalzaabi/moe-expert-placement. CI results are under the repository's
+  **Actions** tab.
 
 ## Documentation
 
@@ -149,9 +151,31 @@ git push -u origin main      # CI then runs under the repository's Actions tab
 * `docs/DEMO_GUIDE.md` — 7–10 minute professor demonstration
 * `docs/FUTURE_GPU_VALIDATION.md` — what must be measured on NVIDIA GPUs
 * `docs/FEEDBACK_RESPONSE.md` — point-by-point response to the proposal feedback, scope change
+* `docs/SERVICE.md` — planner API and database: components, lifecycle, transactions, errors, performance, limits
+* `docs/database_schema.sql` — PostgreSQL DDL of the planner database (generated)
 * `docs/USE_CASES.md`, `docs/AGENT.md`, `docs/FORECASTING_AND_REGRET.md`, `docs/SCALABILITY.md`, `docs/GOVERNANCE.md`
 
 ## Environment
 
 Python 3.11 `.venv` (unchanged): torch 2.14.1, transformers 4.57.6, streamlit 1.66.1, plotly 7.1.0,
-pandas 3.0.6, numpy 2.4.6, safetensors 0.8.0. See `requirements.txt`. No packages were added.
+pandas 3.0.6, numpy 2.4.6, safetensors 0.8.0. Added for the planner API: fastapi 0.162.2, uvicorn 0.54.0,
+sqlalchemy 2.1.8, pydantic 2.14.3, httpx2 2.16.0 (test client). See `requirements.txt`.
+
+## Planner API
+
+`service/` turns the planner into a service with a persistent decision record. See `docs/SERVICE.md`.
+
+| Method and path | What it does |
+|---|---|
+| `GET /health` | database and measured routing data reachable (503 if not) |
+| `POST /plan` | plan a scenario, store nothing (what-if) |
+| `POST /proposals` | plan against the active plan; the authoriser returns `ready`, `awaiting_approval` or `rejected` |
+| `POST /proposals/{id}/approve`, `/deny` | human decision (`{"approver": "...", "comment": "..."}`) |
+| `POST /proposals/{id}/apply` | make the plan active; `409` if the active plan changed since assessment |
+| `GET /plans/active`, `/plans/{id}`, `/proposals`, `/audit` | read state and the append-only audit log |
+
+Configuration is by environment variable (`MOE_DATABASE_URL`, `MOE_LOG_LEVEL`, `MOE_APPROVAL_GB`, `MOE_MIN_GAIN`,
+`MOE_MAX_MIGRATION_FRACTION`, `MOE_STICKINESS`); defaults are a local SQLite file `data/planner.db` and the
+operations agent's thresholds. The PostgreSQL schema is in `docs/database_schema.sql` (generated from the models).
+What is real: expert routing profiles (measured on OLMoE). What is hypothetical: device speeds, network numbers and
+the analytic cost model; the API does **not** move weights on real GPUs.

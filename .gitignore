@@ -20,3 +20,6 @@ outputs/runs/.partial-*/
 
 # Proposal document stays local (not published)
 docs/proposal/
+
+# Local planner database (service/, default MOE_DATABASE_URL)
+data/

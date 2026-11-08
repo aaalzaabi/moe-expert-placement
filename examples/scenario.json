@@ -1,0 +1,104 @@
+{
+  "sites": [
+    {
+      "name": "abudhabi",
+      "region": "UAE",
+      "residency": false,
+      "devices": [
+        {
+          "name": "abudhabi-g0",
+          "speed": 1.0,
+          "slots": 256
+        },
+        {
+          "name": "abudhabi-g1",
+          "speed": 1.3,
+          "slots": 256
+        },
+        {
+          "name": "abudhabi-g2",
+          "speed": 0.8,
+          "slots": 256
+        },
+        {
+          "name": "abudhabi-g3",
+          "speed": 1.6,
+          "slots": 256
+        }
+      ],
+      "requests_per_window": 3000,
+      "mix": {
+        "general": 0.5,
+        "ai": 0.3,
+        "coding": 0.2
+      }
+    },
+    {
+      "name": "frankfurt",
+      "region": "EU",
+      "residency": false,
+      "devices": [
+        {
+          "name": "frankfurt-g0",
+          "speed": 1.0,
+          "slots": 256
+        },
+        {
+          "name": "frankfurt-g1",
+          "speed": 1.3,
+          "slots": 256
+        },
+        {
+          "name": "frankfurt-g2",
+          "speed": 0.8,
+          "slots": 256
+        },
+        {
+          "name": "frankfurt-g3",
+          "speed": 1.6,
+          "slots": 256
+        }
+      ],
+      "requests_per_window": 2500,
+      "mix": {
+        "coding": 0.55,
+        "ai": 0.25,
+        "general": 0.2
+      }
+    },
+    {
+      "name": "singapore",
+      "region": "APAC",
+      "residency": false,
+      "devices": [
+        {
+          "name": "singapore-g0",
+          "speed": 1.0,
+          "slots": 256
+        },
+        {
+          "name": "singapore-g1",
+          "speed": 1.3,
+          "slots": 256
+        },
+        {
+          "name": "singapore-g2",
+          "speed": 0.8,
+          "slots": 256
+        },
+        {
+          "name": "singapore-g3",
+          "speed": 1.6,
+          "slots": 256
+        }
+      ],
+      "requests_per_window": 2800,
+      "mix": {
+        "ai": 0.5,
+        "coding": 0.3,
+        "general": 0.2
+      }
+    }
+  ],
+  "tokens_per_request": 400
+}
