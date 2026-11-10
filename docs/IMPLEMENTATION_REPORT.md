@@ -5,6 +5,13 @@ author: "Ayesha Alzaabi (individual project)"
 date: "10 November 2026"
 ---
 
+**Repository:** <https://github.com/aaalzaabi/moe-expert-placement>
+
+**Submitted version (tag `implementation-deliverable`):**
+<https://github.com/aaalzaabi/moe-expert-placement/tree/implementation-deliverable>
+
+The README's "Implementation deliverable — where everything is" table points to every item in the brief.
+
 # 1. Executive summary
 
 **Objective.** Mixture-of-Experts (MoE) models send each token to a few of many expert networks. When experts are
