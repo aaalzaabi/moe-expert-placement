@@ -289,8 +289,8 @@ needs about 15 GB of free memory.
 
 # 7. AI-assisted development
 
-Declared in full in `docs/AI_USAGE_AND_CONTRIBUTIONS.md`. In short: AI coding assistants (including Claude Code)
-were used to draft modules, tests, documentation and refactors. Every generated change was run against the test
+Declared in full in `docs/AI_USAGE_AND_CONTRIBUTIONS.md`. In short: Claude Code was used to draft modules, tests,
+documentation and refactors, and ChatGPT for general questions, explanations and wording suggestions. Every generated change was run against the test
 suite; reproduction tests guaranteed that refactoring did not alter any original result; and several generated
 claims were corrected after checking (e.g. bandwidth units in GB/s, a stale "hypothetical" comment on a value that
 was in fact checkpoint-derived, a dashboard that labelled load proxies as utilisation). In this phase, the

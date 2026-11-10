@@ -1,8 +1,5 @@
 # Contribution and AI usage declaration
 
-> **Author to confirm before submission:** check the tool list in section 2 and add any assistant not listed
-> (for example ChatGPT or GitHub Copilot, if used). Remove this note afterwards.
-
 ## 1. Individual contributions
 
 Individual project. **Ayesha Alzaabi** owns and is accountable for every component.
@@ -24,7 +21,7 @@ Every commit in `github.com/aaalzaabi/moe-expert-placement` is authored by Ayesh
 | Tool | Used for | Not used for |
 |---|---|---|
 | Claude Code (Anthropic) — coding agent in the terminal / desktop app | drafting and refactoring Python modules and tests; writing documentation drafts; running the test suite and experiments; Docker and CI configuration; generating the evidence tables and the updated architecture diagram | deciding research questions, thresholds or which results to report; approving its own changes without tests |
-| *(add any other assistant used)* | | |
+| ChatGPT (OpenAI) — chat assistant | general questions, explanations of concepts, and wording suggestions | deciding research questions, thresholds or which results to report; code was not used without being run against the test suite |
 
 The deployed system itself contains **no LLM in the decision path**: the operations agent and the API use a
 deterministic Authoriser. The only neural model at run time is OLMoE, which is the object of study.

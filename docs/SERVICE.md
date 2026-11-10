@@ -122,5 +122,6 @@ hourly in the design, so ~16 ms per decision leaves a very large margin.
 * No connection to a serving engine: `apply` changes the active plan in the database only.
 * Changing the set of sites is rejected (it is a new deployment, not a re-placement).
 * Demand in a request is the expected demand for the next horizon; the API does not run the forecaster itself.
-* Tested on SQLite (in CI and locally); PostgreSQL is supported through the same models but was not run in the
-  test suite.
+* The 218-test suite runs on SQLite (locally, in Docker and in CI). PostgreSQL 16 is verified by the 14-check
+  end-to-end workflow (`scripts/smoke_e2e.py`), which CI's Docker job runs against both SQLite and PostgreSQL on
+  every push.
