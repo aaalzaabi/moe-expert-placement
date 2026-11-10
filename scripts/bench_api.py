@@ -49,6 +49,7 @@ def main() -> int:
     ap.add_argument("--url", default="http://localhost:8000")
     ap.add_argument("-n", type=int, default=50)
     ap.add_argument("--scenario", default=str(ROOT / "examples" / "scenario.json"))
+    ap.add_argument("--out", help="also write the results as CSV")
     args = ap.parse_args()
     sc = json.loads(Path(args.scenario).read_text())
     try:
@@ -67,6 +68,12 @@ def main() -> int:
              bench("GET /audit?limit=200", lambda: call(args.url, "GET", "/audit?limit=200"), args.n),
              bench("POST /plan invalid -> 422", lambda: call(args.url, "POST", "/plan", bad), args.n)]
     print(json.dumps(rows, indent=1))
+    if args.out:
+        import csv
+        with open(args.out, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0]))
+            w.writeheader()
+            w.writerows(rows)
     return 0
 
 

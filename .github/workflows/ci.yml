@@ -20,3 +20,23 @@ jobs:
         run: python -m unittest discover -s tests -t . -v
       - name: Check original results are reproduced
         run: python -m unittest tests.test_reproduction -v
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker compose build
+      - name: Test suite inside the image
+        run: docker compose --profile test run --rm tests
+      - name: End-to-end workflow on SQLite and PostgreSQL
+        run: |
+          docker compose up -d api
+          docker compose --profile postgres up -d db api-pg
+          for p in 8000 8001; do
+            for i in $(seq 1 30); do curl -sf localhost:$p/health && break; sleep 2; done
+            python3 scripts/smoke_e2e.py --url http://localhost:$p
+          done
+      - name: Logs on failure
+        if: failure()
+        run: docker compose --profile postgres logs

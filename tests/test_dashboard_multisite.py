@@ -374,3 +374,23 @@ class TestGovernanceViews(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestLayoutChange(unittest.TestCase):
+    """The per-GPU distribution on the agent page must agree with the agent's own migration estimate."""
+
+    def test_added_copies_match_migration_and_failed_gpu_is_emptied(self):
+        for key, offset in [("uc4_workload_shift", 36), ("uc5_device_failure", 40)]:
+            with self.subTest(key=key):
+                Y = U.USE_CASES[key].demand(routing())[0]
+                r = V.run_agent_cycles(key, Y, 1, offset)
+                pr = r["proposals"][-1]
+                p = pr["proposal"]
+                lay = V.layout_change(pr["current_plan"], pr["current_topo"], p.plan, p.topo)
+                self.assertEqual(int(lay["added"].sum()), int(p.migration["new_copies"]))
+                self.assertEqual(int(lay["proposed copies"].sum()), p.plan.copies)
+                self.assertEqual(int(lay["current copies"].sum()), pr["current_plan"].copies)
+                if key == "uc5_device_failure":
+                    failed = lay.set_index("device").loc["abudhabi-g3"]
+                    self.assertFalse(failed["in proposed plan"])
+                    self.assertEqual(failed["proposed copies"], 0)

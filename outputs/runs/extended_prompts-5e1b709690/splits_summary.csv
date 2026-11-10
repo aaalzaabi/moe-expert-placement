@@ -1,0 +1,2 @@
+evaluation,draws,mean_vs_static_pct,p2.5_vs_static_pct,p97.5_vs_static_pct,share_beats_static_pct,mean_vs_balanced_pct,share_beats_balanced_pct
+splits,1000.0,-28.425384616458892,-31.15619012926915,-25.334858537350502,100.0,-26.50324862307027,100.0

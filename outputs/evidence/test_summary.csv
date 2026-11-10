@@ -1,0 +1,7 @@
+category,tests,negative_cases,passed,failed,total_s
+end-to-end (UI),53,14,53,0,19.0786
+integration,24,9,24,0,2.6411000000000002
+integration (regression),15,1,15,0,0.2563
+integration + end-to-end (API/DB),27,10,27,0,0.741
+unit,99,18,99,0,2.4799
+TOTAL,218,52,218,0,25.196899999999996

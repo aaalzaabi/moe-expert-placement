@@ -1,0 +1,219 @@
+module,class,test,category,negative,outcome,duration_s
+test_agent_usecases,TestAgent,test_act_tool_requires_authoriser_token,integration,False,pass,0.1542
+test_agent_usecases,TestAgent,test_authoriser_rules,integration,False,pass,0.0
+test_agent_usecases,TestAgent,test_denied_approval_keeps_current_plan,integration,True,pass,0.2757
+test_agent_usecases,TestAgent,test_device_failure_restores_feasible_plan,integration,True,pass,0.4557
+test_agent_usecases,TestAgent,test_every_tool_call_is_traced_with_permission,integration,False,pass,0.2217
+test_agent_usecases,TestAgent,test_residency_never_violated_and_changes_need_approval,integration,True,pass,0.458
+test_agent_usecases,TestScalability,test_small_grid_and_fits,integration,False,pass,0.0356
+test_agent_usecases,TestUseCases,test_six_use_cases_with_users_and_governance,integration,False,pass,0.0
+test_assistant,TestAssistant,test_every_topic_answers,unit,False,pass,0.0005
+test_assistant,TestAssistant,test_numbers_match_saved_results,unit,False,pass,0.0016
+test_assistant,TestAssistant,test_routing,unit,False,pass,0.0173
+test_assistant,TestAssistant,test_unknown_gets_suggestions_not_a_guess,unit,True,pass,0.0004
+test_dashboard,TestDashboardInteractions,test_demo_walks_all_ten_steps,end-to-end (UI),False,pass,0.2545
+test_dashboard,TestDashboardInteractions,test_evaluation_live_mode,end-to-end (UI),False,pass,0.2102
+test_dashboard,TestDashboardInteractions,test_migration_fault_injection_fails_and_rolls_back,end-to-end (UI),True,pass,0.2465
+test_dashboard,TestDashboardInteractions,test_migration_sandbox_follow_controller_rejects,end-to-end (UI),True,pass,0.1255
+test_dashboard,TestDashboardInteractions,test_migration_sandbox_override_executes_and_activates,end-to-end (UI),False,pass,0.1267
+test_dashboard,TestDashboardInteractions,test_network_fine_sweep,end-to-end (UI),False,pass,0.3471
+test_dashboard,TestDashboardInteractions,test_placement_planner_reconfigures_cluster,end-to-end (UI),False,pass,0.3165
+test_dashboard,TestDashboardSmoke,test_dashboard_never_imports_torch,end-to-end (UI),False,pass,1.6114
+test_dashboard,TestDashboardSmoke,test_entrypoint_renders_default_page,end-to-end (UI),False,pass,0.0446
+test_dashboard,TestDashboardSmoke,test_every_page_renders_without_exception,end-to-end (UI),False,pass,1.3503
+test_dashboard,TestDashboardSmoke,test_no_deprecated_use_container_width,end-to-end (UI),False,pass,0.0009
+test_dashboard,TestExplanationsAndAssistant,test_chat_answers_a_question,end-to-end (UI),False,pass,0.0591
+test_dashboard,TestExplanationsAndAssistant,test_migration_page_explains_rejection,end-to-end (UI),True,pass,0.0712
+test_dashboard,TestExplanationsAndAssistant,test_placement_page_shows_random_check,end-to-end (UI),False,pass,0.0859
+test_dashboard,TestExplanationsAndAssistant,test_sidebar_quick_question,end-to-end (UI),False,pass,0.0496
+test_dashboard,TestMultisitePage,test_live_planner_switches_use_case,end-to-end (UI),False,pass,0.3599
+test_dashboard,TestMyPrompt,test_page_idle_does_not_load_model,end-to-end (UI),False,pass,0.0498
+test_dashboard,TestMyPrompt,test_results_render_from_a_routing_table,end-to-end (UI),False,pass,0.149
+test_dashboard,TestViewModes,test_every_page_renders_in_detailed_view,end-to-end (UI),False,pass,1.3076
+test_dashboard,TestViewModes,test_simple_view_folds_detail_and_toggle_unfolds,end-to-end (UI),False,pass,0.1636
+test_dashboard_multisite,TestAgentSafety,test_08_act_tool_requires_authoriser_token,end-to-end (UI),False,pass,0.1493
+test_dashboard_multisite,TestAgentSafety,test_09_unsafe_proposals_rejected,end-to-end (UI),True,pass,0.0
+test_dashboard_multisite,TestAgentSafety,test_10_residency_violations_are_blocked,end-to-end (UI),True,pass,0.4458
+test_dashboard_multisite,TestAgentSafety,test_11_human_approval_required_and_respected,end-to-end (UI),False,pass,1.2635
+test_dashboard_multisite,TestAgentSafety,test_12_audit_events_recorded,end-to-end (UI),False,pass,0.4434
+test_dashboard_multisite,TestForecastViews,test_05_every_forecasting_method_produces_validated_output,end-to-end (UI),False,pass,0.0002
+test_dashboard_multisite,TestForecastViews,test_05_validation_rejects_bad_forecasts,end-to-end (UI),True,pass,0.0
+test_dashboard_multisite,TestForecastViews,test_06_charts_handle_missing_or_empty_data,end-to-end (UI),True,pass,0.0032
+test_dashboard_multisite,TestForecastViews,test_predicted_vs_actual_and_error_by_site,end-to-end (UI),True,pass,0.0072
+test_dashboard_multisite,TestGovernanceViews,test_governance_from_single_source,end-to-end (UI),False,pass,0.0018
+test_dashboard_multisite,TestLayoutChange,test_added_copies_match_migration_and_failed_gpu_is_emptied,end-to-end (UI),True,pass,0.3483
+test_dashboard_multisite,TestPageBehaviour,test_11_approve_button_applies_change_in_session_only,end-to-end (UI),False,pass,2.5367
+test_dashboard_multisite,TestPageBehaviour,test_15_16_page_and_interactions_never_load_olmoe,end-to-end (UI),False,pass,0.4102
+test_dashboard_multisite,TestPageBehaviour,test_18_session_state_isolated_between_scenarios,end-to-end (UI),False,pass,0.6381
+test_dashboard_multisite,TestPageBehaviour,test_19_missing_saved_results_show_messages_not_crashes,end-to-end (UI),True,pass,0.125
+test_dashboard_multisite,TestPageBehaviour,test_20_no_dashboard_action_writes_experiment_outputs,end-to-end (UI),False,pass,1.8028
+test_dashboard_multisite,TestRegistration,test_01_dashboard_and_view_models_import,end-to-end (UI),False,pass,0.0456
+test_dashboard_multisite,TestRegistration,test_02_every_page_file_is_registered_in_navigation,end-to-end (UI),False,pass,0.0002
+test_dashboard_multisite,TestRegistration,test_03_all_six_use_cases_selectable,end-to-end (UI),False,pass,0.1376
+test_dashboard_multisite,TestRegistration,test_17_widget_keys_unique_per_page_and_namespaced,end-to-end (UI),False,pass,0.0006
+test_dashboard_multisite,TestRegretViews,test_07_agent_decisions_ignore_future_demand,end-to-end (UI),False,pass,0.7848
+test_dashboard_multisite,TestRegretViews,test_07_regret_is_labelled_hindsight_evaluation_only,end-to-end (UI),False,pass,0.0039
+test_dashboard_multisite,TestRegretViews,test_capacity_violation_definitions_and_drift,end-to-end (UI),True,pass,0.0017
+test_dashboard_multisite,TestScalabilityViews,test_13_scalability_results_load,end-to-end (UI),False,pass,0.0039
+test_dashboard_multisite,TestScalabilityViews,test_14_page_states_where_timings_were_measured,end-to-end (UI),False,pass,0.1415
+test_dashboard_multisite,TestScalabilityViews,test_14_planner_timing_and_simulated_metrics_never_mislabeled,end-to-end (UI),False,pass,0.0
+test_dashboard_multisite,TestScenario,test_04_page_shows_parameters_of_selected_scenario,end-to-end (UI),False,pass,0.2259
+test_dashboard_multisite,TestScenario,test_04_profile_reflects_selected_use_case,end-to-end (UI),False,pass,0.0009
+test_data_and_schemas,TestCheckpointFacts,test_expert_bytes_match_checkpoint_metadata,unit,False,pass,0.0048
+test_data_and_schemas,TestCheckpointFacts,test_model_config_matches_constants,unit,False,pass,0.0001
+test_data_and_schemas,TestConfig,test_auto_capacity_for_other_gpu_counts,unit,False,pass,0.0
+test_data_and_schemas,TestConfig,test_default_matches_legacy_constants,unit,False,pass,0.0
+test_data_and_schemas,TestConfig,test_round_trip_and_fingerprint,unit,False,pass,0.0002
+test_data_and_schemas,TestConfig,test_units_gb_per_s_not_gbps,unit,False,pass,0.0
+test_data_and_schemas,TestConfig,test_validation_errors,unit,True,pass,0.0001
+test_data_and_schemas,TestMeasuredRouting,test_demand_is_complete_index,unit,False,pass,0.0011
+test_data_and_schemas,TestMeasuredRouting,test_timings_align_with_routing,unit,False,pass,0.0005
+test_data_and_schemas,TestMeasuredRouting,test_top8_invariant_and_complete_grid,unit,False,pass,0.0016
+test_data_and_schemas,TestMeasuredRouting,test_train_test_split_has_one_prompt_per_category,unit,False,pass,0.0004
+test_data_and_schemas,TestMeasuredRouting,test_validation_detects_corruption,unit,True,pass,0.0017
+test_data_and_schemas,TestProvenance,test_every_original_csv_has_provenance,unit,False,pass,0.0046
+test_data_and_schemas,TestProvenance,test_kinds_are_known,unit,False,pass,0.0
+test_data_and_schemas,TestSchemas,test_every_saved_csv_matches_schema,unit,False,pass,0.0109
+test_data_and_schemas,TestSchemas,test_missing_column_raises_schema_error,unit,True,pass,0.0002
+test_data_and_schemas,TestSchemas,test_missing_file_has_helpful_message,unit,True,pass,0.0
+test_experiment_runner,TestCLI,test_invalid_config_message,integration,True,pass,0.1795
+test_experiment_runner,TestCLI,test_parse_arguments,integration,False,pass,0.0008
+test_experiment_runner,TestCLI,test_profile_routing_dry_run_loads_nothing,integration,False,pass,0.0264
+test_experiment_runner,TestLegacyGuard,test_force_and_new_files_pass,integration,False,pass,0.0002
+test_experiment_runner,TestLegacyGuard,test_legacy_scripts_refuse_without_force,integration,True,pass,0.3619
+test_experiment_runner,TestLegacyGuard,test_refuses_to_overwrite_measurements,integration,True,pass,0.0001
+test_experiment_runner,TestRunner,test_rerun_skips_unless_overwrite,integration,True,pass,0.1235
+test_experiment_runner,TestRunner,test_run_id_is_deterministic_and_parameter_sensitive,integration,False,pass,0.0002
+test_experiment_runner,TestRunner,test_run_writes_csvs_and_metadata,integration,False,pass,0.052
+test_experiment_runner,TestRunner,test_sweep_records_invalid_points_and_continues,integration,True,pass,0.0526
+test_experiment_runner,TestRunner,test_sweep_summary,integration,False,pass,0.2066
+test_extended_prompts,TestExtendedPrompts,test_original_split_reproduces_published_held_out_gain,integration (regression),False,pass,0.0074
+test_extended_prompts,TestExtendedPrompts,test_overlapping_train_and_test_prompts_raise,integration (regression),True,pass,0.0
+test_extended_prompts,TestExtendedPrompts,test_reprofiled_original_prompts_match_published_routing_exactly,integration (regression),False,pass,0.004
+test_extended_prompts,TestExtendedPrompts,test_stratified_split_is_balanced_and_disjoint,integration (regression),False,pass,0.0015
+test_extended_prompts,TestExtendedPrompts,test_unseen_prompts_keep_the_gain,integration (regression),False,pass,0.0078
+test_forecast,TestForecasters,test_causal,unit,False,pass,0.0038
+test_forecast,TestForecasters,test_fit_ignores_data_after_train_end,unit,False,pass,0.0141
+test_forecast,TestForecasters,test_metrics,unit,False,pass,0.0
+test_forecast,TestForecasters,test_seasonal_models_exact_on_periodic_noise_free_demand,unit,False,pass,0.0015
+test_forecast,TestForecasters,test_site_aware_beats_global_popularity,unit,False,pass,0.0035
+test_forecast,TestRegretAndDrift,test_perfect_forecast_has_zero_regret,unit,False,pass,0.0494
+test_forecast,TestRegretAndDrift,test_rolling_evaluation_and_drift_table,unit,False,pass,0.3508
+test_forecast,TestWorkload,test_expected_tensor_matches_token_volume,unit,False,pass,0.0042
+test_forecast,TestWorkload,test_profiles_sum_to_128_assignments_per_token,unit,False,pass,0.0014
+test_forecast,TestWorkload,test_shift_changes_mix_only_inside_window,unit,False,pass,0.0012
+test_gpu_viz,TestGpuViz,test_busy_time_matches_placement_page,unit,False,pass,0.0027
+test_gpu_viz,TestGpuViz,test_decision_table_marks_the_minimum,unit,False,pass,0.0006
+test_gpu_viz,TestGpuViz,test_figures_have_frames,unit,False,pass,0.0875
+test_gpu_viz,TestGpuViz,test_question_layers_and_summary,unit,False,pass,0.0025
+test_gpu_viz,TestGpuViz,test_replaying_the_rule_in_trace_order_gives_the_same_choices,unit,False,pass,0.0015
+test_gpu_viz,TestGpuViz,test_trace_is_the_real_placement,unit,False,pass,0.003
+test_live_answer,TestLiveAnswer,test_invalid_inputs_fail_before_importing_torch,integration,True,pass,0.0
+test_live_answer,TestLiveAnswer,test_length_limit_is_reported,integration,False,pass,0.0007
+test_live_answer,TestLiveAnswer,test_uses_instruction_template_and_decodes_only_new_tokens,integration,False,pass,0.0003
+test_multisite,TestCostModel,test_hand_computed_example,unit,False,pass,0.0001
+test_multisite,TestCostModel,test_objective_penalises_cap,unit,False,pass,0.0
+test_multisite,TestMigration,test_identical_plans_cost_nothing,unit,False,pass,0.0554
+test_multisite,TestMigration,test_lost_device_copies_reload_from_storage_when_unique,unit,False,pass,0.0488
+test_multisite,TestMigration,test_stickiness_reduces_churn,unit,False,pass,0.1086
+test_multisite,TestPlanner,test_balance_mode_replicas_never_increase_J,unit,False,pass,0.1001
+test_multisite,TestPlanner,test_capacity_respected,unit,False,pass,0.0549
+test_multisite,TestPlanner,test_every_expert_hosted_and_served_by_a_host,unit,False,pass,0.0542
+test_multisite,TestPlanner,test_greedy_matches_exhaustive_on_tiny_instance,unit,False,pass,0.0151
+test_multisite,TestPlanner,test_locality_mode_cuts_latency_within_cap,unit,False,pass,0.0693
+test_multisite,TestPlanner,test_memory_constraint_limits_slots,unit,False,pass,0.0046
+test_multisite,TestPlanner,test_residency_infeasible_when_site_too_small,unit,True,pass,0.0
+test_multisite,TestPlanner,test_residency_zero_violations_and_full_local_copy,unit,True,pass,0.0487
+test_multisite,TestPlanner,test_single_site_equals_demand_aware,unit,False,pass,0.0065
+test_placement,TestAlgorithms,test_balanced_equals_demand_aware_on_identical_gpus,unit,False,pass,0.0026
+test_placement,TestAlgorithms,test_demand_aware_reduces_train_peak,unit,False,pass,0.0075
+test_placement,TestAlgorithms,test_demand_aware_uses_speed,unit,False,pass,0.0003
+test_placement,TestAlgorithms,test_moved_experts_count,unit,False,pass,0.0085
+test_placement,TestAlgorithms,test_placement_ignores_test_demand,unit,False,pass,0.0087
+test_placement,TestAlgorithms,test_static_is_round_robin,unit,False,pass,0.0
+test_placement,TestBetterThanRandom,test_demand_aware_beats_random_on_heldout,unit,False,pass,0.0002
+test_placement,TestBetterThanRandom,test_lower_bound_is_never_beaten,unit,False,pass,0.0
+test_placement,TestBetterThanRandom,test_random_baseline_respects_capacity_and_is_seeded,unit,False,pass,0.0009
+test_placement,TestFeasibility,test_every_expert_placed_once_within_capacity,unit,False,pass,0.0324
+test_placement,TestFeasibility,test_insufficient_capacity_raises,unit,True,pass,0.0
+test_placement,TestFeasibility,test_memory_budget_marks_infeasible,unit,True,pass,0.0052
+test_placement,TestFeasibility,test_unknown_strategy_raises,unit,True,pass,0.0
+test_policy,TestController,test_cost_aware_row_equals_chosen_policy,unit,False,pass,0.0749
+test_policy,TestController,test_decision_never_uses_heldout_requests,unit,False,pass,0.0652
+test_policy,TestController,test_infeasible_migration_is_rejected,unit,True,pass,0.0116
+test_policy,TestController,test_saved_phase4e_decision_is_reject_for_p95,unit,True,pass,0.0127
+test_policy,TestController,test_thresholds_drive_decision,unit,False,pass,0.0183
+test_policy,TestExplanation,test_approval_is_explained_without_changes,unit,False,pass,0.0286
+test_policy,TestExplanation,test_infeasible_move_only_blames_memory,unit,True,pass,0.0258
+test_policy,TestExplanation,test_saved_rejection_is_explained,unit,True,pass,0.2198
+test_policy,TestExplanation,test_suggested_change_really_approves,unit,False,pass,0.2333
+test_policy,TestStateMachine,test_every_state_reachable,unit,False,pass,0.0
+test_policy,TestStateMachine,test_failure_paths,unit,True,pass,0.0
+test_policy,TestStateMachine,test_happy_path,unit,False,pass,0.0
+test_policy,TestStateMachine,test_illegal_transitions,unit,True,pass,0.0
+test_policy,TestStateMachine,test_reject_and_repropose,unit,True,pass,0.0
+test_presentation_flow,TestPresentationFlow,test_failure_cycle_and_all_stages_work,end-to-end (UI),True,pass,0.3754
+test_presentation_flow,TestPresentationFlow,test_generation_failure_is_visible_and_does_not_reuse_old_answer,end-to-end (UI),True,pass,0.1135
+test_presentation_flow,TestPresentationFlow,test_human_approval_waits_and_respects_approve_or_deny,end-to-end (UI),True,pass,1.5293
+test_presentation_flow,TestPresentationFlow,test_real_model_button_displays_answer_and_reruns_do_not_generate_again,end-to-end (UI),False,pass,0.1818
+test_presentation_flow,TestPresentationFlow,test_start_button_opens_story_and_all_scenes_work,end-to-end (UI),False,pass,0.4266
+test_real_expert_parallel,TestPlanForRealDevices,test_identical_gpus_make_demand_aware_equal_balanced,integration,False,pass,0.0084
+test_real_expert_parallel,TestPlanForRealDevices,test_plan_covers_every_expert_once_per_strategy,integration,False,pass,0.027
+test_reproduction,TestPlacementReproduction,test_gpu_placements_phase3a,integration (regression),False,pass,0.0092
+test_reproduction,TestPlacementReproduction,test_heldout_comparison_phase3b,integration (regression),False,pass,0.0113
+test_reproduction,TestPlacementReproduction,test_heterogeneous_placements_phase3b,integration (regression),False,pass,0.0093
+test_reproduction,TestSimulationReproduction,test_integrated_outputs_are_calibrated_100gbps,integration (regression),False,pass,0.0168
+test_reproduction,TestSimulationReproduction,test_phase4a_batch,integration (regression),False,pass,0.0377
+test_reproduction,TestSimulationReproduction,test_phase4b_migration_events,integration (regression),False,pass,0.0017
+test_reproduction,TestSimulationReproduction,test_phase4c_migration_benefit,integration (regression),False,pass,0.0282
+test_reproduction,TestSimulationReproduction,test_phase4e_policy_files,integration (regression),False,pass,0.0367
+test_reproduction,TestSimulationReproduction,test_phase4f_requests_and_migration_at_3gbps,integration (regression),False,pass,0.0196
+test_reproduction,TestSimulationReproduction,test_phase4f_sweeps,integration (regression),False,pass,0.0651
+test_service,TestHealthAndPlan,test_api_plan_matches_the_core_planner,integration + end-to-end (API/DB),False,pass,0.0427
+test_service,TestHealthAndPlan,test_health_is_degraded_without_routing_data,integration + end-to-end (API/DB),False,pass,0.0076
+test_service,TestHealthAndPlan,test_health_reports_database_and_measured_data,integration + end-to-end (API/DB),False,pass,0.0064
+test_service,TestHealthAndPlan,test_plan_is_stateless_and_places_every_expert,integration + end-to-end (API/DB),False,pass,0.0224
+test_service,TestHumanApproval,test_approve_then_apply,integration + end-to-end (API/DB),False,pass,0.0306
+test_service,TestHumanApproval,test_deny_is_terminal,integration + end-to-end (API/DB),True,pass,0.0277
+test_service,TestInvalidRequests,test_changing_the_sites_of_the_active_plan_is_rejected,integration + end-to-end (API/DB),True,pass,0.0252
+test_service,TestInvalidRequests,test_failed_request_writes_nothing,integration + end-to-end (API/DB),True,pass,0.0111
+test_service,TestInvalidRequests,test_schema_violations_return_422,integration + end-to-end (API/DB),True,pass,0.0177
+test_service,TestInvalidRequests,test_unknown_ids_and_bad_decisions,integration + end-to-end (API/DB),True,pass,0.0286
+test_service,TestInvalidRequests,test_unservable_scenarios_return_422_with_a_reason,integration + end-to-end (API/DB),False,pass,0.0105
+test_service,TestPlanningAdapter,test_assignment_round_trip_and_reindex,integration + end-to-end (API/DB),False,pass,0.0419
+test_service,TestPlanningAdapter,test_demand_volume_follows_the_measured_routing,integration + end-to-end (API/DB),False,pass,0.0001
+test_service,TestPlanningAdapter,test_unknown_category_is_a_scenario_error,integration + end-to-end (API/DB),True,pass,0.0001
+test_service,TestProposalWorkflow,test_documented_schema_is_up_to_date,integration + end-to-end (API/DB),False,pass,0.1386
+test_service,TestProposalWorkflow,test_idempotency_key_returns_the_original_proposal,integration + end-to-end (API/DB),True,pass,0.0295
+test_service,TestProposalWorkflow,test_identical_demand_is_rejected_as_no_gain,integration + end-to-end (API/DB),True,pass,0.0391
+test_service,TestProposalWorkflow,test_initial_proposal_is_applied_end_to_end,integration + end-to-end (API/DB),False,pass,0.0275
+test_service,TestProposalWorkflow,test_lost_device_forces_a_restore_from_storage,integration + end-to-end (API/DB),False,pass,0.038
+test_service,TestProposalWorkflow,test_single_active_plan_is_enforced_by_the_database,integration + end-to-end (API/DB),False,pass,0.0237
+test_service,TestProposalWorkflow,test_slower_device_is_scored_on_current_hardware_and_rebalanced,integration + end-to-end (API/DB),False,pass,0.0445
+test_service,TestProposalWorkflow,test_stale_proposal_cannot_be_applied,integration + end-to-end (API/DB),True,pass,0.0618
+test_service,TestProposalWorkflow,test_state_survives_a_restart,integration + end-to-end (API/DB),False,pass,0.0426
+test_service,TestResidency,test_plan_touching_a_residency_site_needs_a_human,integration + end-to-end (API/DB),False,pass,0.023
+test_service,TestSettings,test_defaults_match_the_operations_agent,integration + end-to-end (API/DB),False,pass,0.0
+test_service,TestSettings,test_environment_overrides,integration + end-to-end (API/DB),False,pass,0.0
+test_service,TestSettings,test_invalid_values_are_rejected,integration + end-to-end (API/DB),True,pass,0.0001
+test_simulator_invariants,TestAccountingAndDeterminism,test_all_routed_work_is_computed,unit,False,pass,0.0134
+test_simulator_invariants,TestAccountingAndDeterminism,test_deterministic,unit,False,pass,0.0281
+test_simulator_invariants,TestAccountingAndDeterminism,test_gpu_count_mismatch_is_reported,unit,False,pass,0.0024
+test_simulator_invariants,TestAccountingAndDeterminism,test_higher_bandwidth_never_slows_migration,unit,False,pass,0.0693
+test_simulator_invariants,TestAccountingAndDeterminism,test_poisson_arrivals_seeded,unit,False,pass,0.0699
+test_simulator_invariants,TestAccountingAndDeterminism,test_traffic_conservation,unit,False,pass,0.0143
+test_simulator_invariants,TestLayerDependencies,test_layers_are_sequential_per_request,unit,False,pass,0.0144
+test_simulator_invariants,TestLayerDependencies,test_no_expert_starts_before_its_layer_and_all_finish_within_it,unit,False,pass,0.0153
+test_simulator_invariants,TestLayerDependencies,test_request_latency_equals_last_layer_end,unit,False,pass,0.0143
+test_simulator_invariants,TestMigrationSemantics,test_activation_only_after_every_copy,unit,False,pass,0.0142
+test_simulator_invariants,TestMigrationSemantics,test_byte_based_memory_budget,unit,False,pass,0.0262
+test_simulator_invariants,TestMigrationSemantics,test_compute_uses_pinned_layout,unit,False,pass,0.0175
+test_simulator_invariants,TestMigrationSemantics,test_inference_and_migration_share_links,unit,False,pass,0.027
+test_simulator_invariants,TestMigrationSemantics,test_injected_copy_failure_rolls_back,unit,True,pass,0.0278
+test_simulator_invariants,TestMigrationSemantics,test_requests_keep_layout_active_at_arrival,unit,False,pass,0.0419
+test_simulator_invariants,TestMigrationSemantics,test_staging_capacity_counts_resident_plus_incoming,unit,False,pass,0.0273
+test_simulator_invariants,TestMigrationSemantics,test_state_sequence,unit,False,pass,0.0262
+test_simulator_invariants,TestResourceExclusivity,test_directed_links_never_overlap,unit,False,pass,0.018
+test_simulator_invariants,TestResourceExclusivity,test_gpu_queues_never_overlap,unit,False,pass,0.0154
+test_simulator_invariants,TestResourceExclusivity,test_shared_port_is_never_faster_than_directed,unit,False,pass,0.0832
+test_simulator_invariants,TestResourceExclusivity,test_shared_ports_never_overlap,unit,False,pass,0.0173

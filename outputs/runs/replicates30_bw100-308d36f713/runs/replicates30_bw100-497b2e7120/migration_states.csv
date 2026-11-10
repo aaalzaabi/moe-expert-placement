@@ -1,0 +1,5 @@
+t_ms,state,note
+0.0,proposed,initial
+100.0,approved,controller approved migration
+100.0,transferring,776 expert copies queued
+116.80180195692321,active,all 776 copies staged; atomic switch to demand_aware

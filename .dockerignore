@@ -1,0 +1,16 @@
+.git
+.venv
+.claude
+.agents
+.github
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+.streamlit_dashboard.log
+data/
+docs/proposal/
+outputs/runs/.partial-*
+# Model weights and tokenizer stay on the host; keep only the JSON metadata the code reads
+models/**
+!models/OLMoE-1B-7B-0125-Instruct/config.json
+!models/OLMoE-1B-7B-0125-Instruct/model.safetensors.index.json

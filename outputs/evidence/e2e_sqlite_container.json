@@ -1,0 +1,76 @@
+{
+  "url": "http://localhost:8000",
+  "elapsed_s": 0.182029458,
+  "checks": [
+    {
+      "check": "health returns 200",
+      "passed": true,
+      "detail": "{'status': 'ok', 'version': '1.0.0', 'database': 'ok', 'routing_profiles': 'ok (ai, coding, general)'}"
+    },
+    {
+      "check": "what-if plan returns metrics and writes nothing",
+      "passed": true,
+      "detail": "status 200, audit rows 0 -> 0"
+    },
+    {
+      "check": "proposal is created",
+      "passed": true,
+      "detail": "status 201, proposal status ready: initial"
+    },
+    {
+      "check": "first proposal applied",
+      "passed": true,
+      "detail": "status applied"
+    },
+    {
+      "check": "an active plan exists",
+      "passed": true,
+      "detail": "plan id 1"
+    },
+    {
+      "check": "device failure yields an accepted restore proposal",
+      "passed": true,
+      "detail": "lost abudhabi-g0; status ready: restore"
+    },
+    {
+      "check": "restore applied",
+      "passed": true,
+      "detail": "status applied"
+    },
+    {
+      "check": "active plan no longer uses the failed device",
+      "passed": true,
+      "detail": "plan id 2"
+    },
+    {
+      "check": "applying a proposal on an outdated base returns 409 (stale)",
+      "passed": true,
+      "detail": "status 409"
+    },
+    {
+      "check": "negative device speed rejected with 422",
+      "passed": true,
+      "detail": "status 422"
+    },
+    {
+      "check": "malformed body rejected with 422",
+      "passed": true,
+      "detail": "status 422"
+    },
+    {
+      "check": "unknown proposal returns 404",
+      "passed": true,
+      "detail": "status 404"
+    },
+    {
+      "check": "approving an applied proposal returns 409",
+      "passed": true,
+      "detail": "status 409"
+    },
+    {
+      "check": "every applied proposal has created + activated audit events",
+      "passed": true,
+      "detail": "3 applied proposals, 12 audit events"
+    }
+  ]
+}

@@ -294,6 +294,24 @@ def observation(Y: np.ndarray, key: str, t: int) -> pd.DataFrame:
                                                        for s in range(uc.topology.n_sites)]})
 
 
+def layout_change(cur: M.Plan | None, cur_topo: M.Topology | None, new: M.Plan, new_topo: M.Topology) -> pd.DataFrame:
+    """Expert copies per device before and after a proposal, matched by device name (a failed device may be absent
+    from one topology). 'added' / 'removed' count experts that would be copied to / dropped from each device."""
+    def held(plan, topo):
+        if plan is None or topo is None:
+            return {}
+        return {d.name: (topo.sites[d.site].name, set(np.flatnonzero(plan.hosts[:, g])))
+                for g, d in enumerate(topo.devices)}
+    before, after = held(cur, cur_topo), held(new, new_topo)
+    rows = []
+    for name in list(before) + [n for n in after if n not in before]:
+        site, b = before.get(name, (None, set()))
+        site2, a = after.get(name, (site, set()))
+        rows.append({"device": name, "site": site or site2, "current copies": len(b), "proposed copies": len(a),
+                     "added": len(a - b), "removed": len(b - a), "in proposed plan": name in after})
+    return pd.DataFrame(rows)
+
+
 def placement_summary(plan: M.Plan, topo: M.Topology) -> pd.DataFrame:
     copies = plan.hosts.sum(axis=0)
     return pd.DataFrame({"device": [d.name for d in topo.devices], "site": [topo.sites[d.site].name for d in topo.devices],

@@ -1,0 +1,3 @@
+evaluation,train_prompts,test_prompts,peak_static,peak_balanced,peak_demand_aware,demand_aware_vs_static_pct,demand_aware_vs_balanced_pct,demand_aware_beats_random_pct,demand_aware_gap_to_lower_bound_pct,random_median_peak,lower_bound_peak
+sanity: original split,3,3,896.25,868.75,632.5,-29.428172942817294,-27.194244604316548,,,,
+"unseen: train original 6, test 18 new",6,18,7666.25,7412.5,5381.25,-29.80596771563672,-27.403035413153457,100.0,5.66458472593582,7465.0,5092.765957446809

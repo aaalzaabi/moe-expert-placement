@@ -1,0 +1,67 @@
+%% Implemented system (November 2026). Solid boxes = implemented and tested; dashed = proposed, NOT implemented.
+%% Render: docker run --rm -v "$PWD":/data minlag/mermaid-cli:11.4.2 -i architecture_implemented.mmd -o architecture_implemented.png -w 2000 -b white
+flowchart TB
+  classDef real fill:#d8f3ec,stroke:#137a63,color:#0b3b30
+  classDef sim fill:#e6eefc,stroke:#2f5fb3,color:#13284d
+  classDef store fill:#fff4d6,stroke:#b07d00,color:#4a3400
+  classDef ext fill:#f2f2f2,stroke:#777,color:#333
+  classDef todo fill:#ffffff,stroke:#999,color:#777,stroke-dasharray:5 4
+
+  subgraph L1["1 · Users and clients"]
+    direction LR
+    OP["Operator · curl<br/>smoke_e2e.py · bench_api.py"]:::ext
+    BR["Browser<br/>(reviewer, presenter)"]:::ext
+    CI["GitHub Actions CI<br/>212 tests per push"]:::ext
+  end
+
+  subgraph L2["2 · Docker Compose services (no weights)"]
+    direction LR
+    API["Planner API · FastAPI :8000<br/>app → schemas → workflow → planning<br/>plan · propose · approve · apply · audit"]:::sim
+    UI["Dashboard · Streamlit :8501<br/>guided story · agent cycles<br/>research pages"]:::sim
+  end
+
+  subgraph L3["3 · moeplace core (no torch)"]
+    direction LR
+    SC["Single-cluster path<br/>data · config → placement →<br/>simulator → policy → experiment"]:::sim
+    MSP["Multi-site path<br/>workload Y[t,s,e] → forecast →<br/>agent + Authoriser ⇄ multisite planner"]:::sim
+  end
+
+  subgraph L4["4 · Persistence"]
+    direction LR
+    DB[("Decision DB<br/>SQLite volume (default)<br/>or PostgreSQL 16")]:::store
+    RAW[("outputs/*.csv<br/>measured + original results<br/>overwrite-guarded")]:::store
+    RUNS[("outputs/runs/&lt;id&gt;/<br/>outputs/evidence/<br/>metadata.json + CSV")]:::store
+  end
+
+  subgraph L5["5 · Real model on Mac (MPS)"]
+    direction LR
+    CK[("OLMoE-1B-7B-0125-Instruct<br/>13.8 GB BF16 checkpoint")]:::store
+    PR["Routing profiler<br/>MEASURED routing + timing"]:::real
+    LM["Live prompt page<br/>answer + routing (on click)"]:::real
+    EP["Expert-parallel runner<br/>MPS + CPU, MEASURED"]:::real
+  end
+
+  subgraph FUT["Proposed only"]
+    direction LR
+    AUTH["OIDC / RBAC"]:::todo
+    EXE["Migration executor<br/>gRPC + mTLS"]:::todo
+    VLLM["vLLM on GPUs<br/>expert parallel"]:::todo
+    MON["Prometheus + Grafana"]:::todo
+  end
+
+  OP -->|JSON / HTTP| API
+  BR -->|HTTP| UI
+  CI -.->|unittest| L3
+  API -->|plan_sites · evaluate · Authoriser| MSP
+  UI --> SC & MSP
+  API -->|SQLAlchemy, 1 transaction per change| DB
+  SC & MSP -->|read| RAW
+  SC & MSP -->|atomic write| RUNS
+  UI -->|read only| RAW
+  CK --> PR & LM & EP
+  PR -->|workload_routing.csv| RAW
+  EP --> RUNS
+  LM --> UI
+  API -.-> EXE -.-> VLLM
+  AUTH -.-> API
+  MON -.-> API

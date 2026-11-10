@@ -1,0 +1,122 @@
+[
+  {
+    "request_id": 0,
+    "category": "ai",
+    "prompt": "Explain mixture-of-experts models."
+  },
+  {
+    "request_id": 1,
+    "category": "ai",
+    "prompt": "How does GPU parallelism work?"
+  },
+  {
+    "request_id": 2,
+    "category": "coding",
+    "prompt": "Write a Python sorting function."
+  },
+  {
+    "request_id": 3,
+    "category": "coding",
+    "prompt": "Explain how to optimize a database query."
+  },
+  {
+    "request_id": 4,
+    "category": "general",
+    "prompt": "Why is the sky blue?"
+  },
+  {
+    "request_id": 5,
+    "category": "general",
+    "prompt": "How do airplanes navigate?"
+  },
+  {
+    "request_id": 6,
+    "category": "ai",
+    "prompt": "What is the difference between pretraining and fine-tuning a language model?"
+  },
+  {
+    "request_id": 7,
+    "category": "ai",
+    "prompt": "Describe how attention works in a transformer."
+  },
+  {
+    "request_id": 8,
+    "category": "ai",
+    "prompt": "Why do large models need tensor parallelism?"
+  },
+  {
+    "request_id": 9,
+    "category": "ai",
+    "prompt": "Explain what a learning rate schedule does."
+  },
+  {
+    "request_id": 10,
+    "category": "ai",
+    "prompt": "How does quantization reduce inference memory?"
+  },
+  {
+    "request_id": 11,
+    "category": "ai",
+    "prompt": "What problems does a router solve in a sparse model?"
+  },
+  {
+    "request_id": 12,
+    "category": "coding",
+    "prompt": "Write a function that checks whether a string is a palindrome."
+  },
+  {
+    "request_id": 13,
+    "category": "coding",
+    "prompt": "How do I read a CSV file with pandas and drop missing values?"
+  },
+  {
+    "request_id": 14,
+    "category": "coding",
+    "prompt": "Explain the difference between a list and a tuple in Python."
+  },
+  {
+    "request_id": 15,
+    "category": "coding",
+    "prompt": "Write a SQL query that returns the top five customers by revenue."
+  },
+  {
+    "request_id": 16,
+    "category": "coding",
+    "prompt": "How do I handle exceptions in JavaScript async functions?"
+  },
+  {
+    "request_id": 17,
+    "category": "coding",
+    "prompt": "Implement binary search in C++."
+  },
+  {
+    "request_id": 18,
+    "category": "general",
+    "prompt": "What causes the seasons on Earth?"
+  },
+  {
+    "request_id": 19,
+    "category": "general",
+    "prompt": "Give three tips for writing a clear email."
+  },
+  {
+    "request_id": 20,
+    "category": "general",
+    "prompt": "How do vaccines train the immune system?"
+  },
+  {
+    "request_id": 21,
+    "category": "general",
+    "prompt": "Why do cities have higher temperatures than rural areas?"
+  },
+  {
+    "request_id": 22,
+    "category": "general",
+    "prompt": "Summarize the water cycle in simple terms."
+  },
+  {
+    "request_id": 23,
+    "category": "general",
+    "prompt": "What should I pack for a weekend hiking trip?"
+  }
+]

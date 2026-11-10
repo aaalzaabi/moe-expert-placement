@@ -1,0 +1,2 @@
+decision,forecast_request_ids,evaluation_request_ids,forecast_makespan_gain_pct,forecast_p95_regression_pct,min_makespan_gain_pct,max_p95_regression_pct,migration_feasible,reasons
+approve,"0,2,4","1,3,5",7.3484170939775355,-9.15945901995512,2.0,0.0,True,PASS: Migration feasible in forecast (staging memory / copies): active | PASS: Forecast makespan gain +7.35% >= required 2.00% | PASS: Forecast p95 change -9.16% <= allowed +0.00%

@@ -1,0 +1,6 @@
+# Container image (Dockerfile): the CI set plus the API server and the PostgreSQL driver.
+# No torch: the container runs the planner API, the dashboard (saved data + simulations) and the tests.
+# Live OLMoE inference needs the 13 GB checkpoint and torch, and stays on the host (requirements.txt).
+-r requirements-ci.txt
+uvicorn==0.54.0
+psycopg[binary]==3.2.3

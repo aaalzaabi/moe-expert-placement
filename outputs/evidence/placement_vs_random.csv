@@ -1,0 +1,8 @@
+strategy,peak_load,beats_random_pct,gap_to_best_pct,vs_static_pct
+static,896.25,35.76,49.58718039772724,0.0
+balanced,868.75,57.15,44.99733664772724,-3.0683403068340307
+demand_aware,632.5,100.0,5.566406249999978,-29.428172942817294
+"random (best of 10,000)",716.25,,,
+"random (median of 10,000)",878.75,,,
+hindsight demand-aware (uses test demand),599.375,,,
+"lower bound (speed-proportional, no slot limit)",599.1489361702129,,,

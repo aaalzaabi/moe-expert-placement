@@ -1,0 +1,55 @@
+# docker compose up --build            -> API on :8000 (SQLite in a volume) and dashboard on :8501
+# docker compose --profile postgres up --build api-pg db
+#                                       -> API on :8001 backed by PostgreSQL 16
+# docker compose --profile test run --rm tests -> full unittest suite inside the image
+# MOE_DASHBOARD_PORT=8502 docker compose up    -> if 8501 is already in use on the host
+#
+# The PostgreSQL password is read from the environment (MOE_PG_PASSWORD, e.g. from a local .env file that is
+# not committed). The fallback below is for a throwaway local container only.
+services:
+  api:
+    build: .
+    image: moe-expert-placement:latest
+    ports: ["8000:8000"]
+    environment:
+      MOE_DATABASE_URL: sqlite:////app/data/planner.db
+      MOE_LOG_LEVEL: INFO
+    volumes: ["planner-data:/app/data"]
+
+  dashboard:
+    image: moe-expert-placement:latest
+    depends_on: [api]
+    ports: ["${MOE_DASHBOARD_PORT:-8501}:8501"]
+    command: ["streamlit", "run", "dashboard/app.py", "--server.address=0.0.0.0", "--server.port=8501",
+              "--server.headless=true", "--browser.gatherUsageStats=false"]
+
+  tests:
+    image: moe-expert-placement:latest
+    profiles: ["test"]
+    command: ["python", "-m", "unittest", "discover", "-s", "tests", "-t", "."]
+
+  db:
+    image: postgres:16.4-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: planner
+      POSTGRES_USER: planner
+      POSTGRES_PASSWORD: ${MOE_PG_PASSWORD:-local-dev-only}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U planner -d planner"]
+      interval: 3s
+      retries: 20
+    volumes: ["pg-data:/var/lib/postgresql/data"]
+
+  api-pg:
+    image: moe-expert-placement:latest
+    profiles: ["postgres"]
+    depends_on:
+      db: {condition: service_healthy}
+    ports: ["8001:8000"]
+    environment:
+      MOE_DATABASE_URL: postgresql+psycopg://planner:${MOE_PG_PASSWORD:-local-dev-only}@db:5432/planner
+
+volumes:
+  planner-data:
+  pg-data:

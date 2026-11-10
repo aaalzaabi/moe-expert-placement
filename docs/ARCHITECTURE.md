@@ -1,5 +1,8 @@
 # Architecture
 
+The diagram of the whole implemented system (API, database, Docker, real-model layer, and what is still only
+proposed) is `docs/figures/architecture_implemented.png`; the diagrams below detail the core library.
+
 ```mermaid
 flowchart LR
   M["OLMoE checkpoint<br/>(models/)"] -->|"profile_routing.py / profile_workloads.py<br/>explicit, expensive"| R["Measured routing<br/>workload_routing.csv"]

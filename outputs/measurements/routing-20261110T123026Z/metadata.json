@@ -1,0 +1,15 @@
+{
+  "kind": "measured",
+  "model": "allenai/OLMoE-1B-7B-0125-Instruct",
+  "device": "mps",
+  "dtype": "float32",
+  "chat_template": false,
+  "warmup_passes": 1,
+  "seed": 0,
+  "model_load_seconds": 242.9461047079967,
+  "prompts": 24,
+  "created_utc": "20261110T123026Z",
+  "torch": "2.14.1",
+  "platform": "macOS-15.8.2-arm64-arm-64bit",
+  "note": "Prefill-only routing (no generated tokens). Timing is Apple-silicon single-device, not multi-GPU."
+}

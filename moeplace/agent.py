@@ -287,7 +287,8 @@ class PlacementAgent:
                     human = "approved" if ok else ("pending" if "pending" in str(approved_by) else "denied")
                     self.audit.append({"t": t, "event": f"human approval {human} for {prop.reason} ({approved_by})"})
                 self.proposals.append({"t": t, "proposal": prop, "authoriser_ok": authoriser_ok,
-                                       "needs_human": needs_human, "human_decision": human, "reasons": reasons})
+                                       "needs_human": needs_human, "human_decision": human, "reasons": reasons,
+                                       "current_plan": self.plan, "current_topo": self.topo})
                 entry = {"t": t, "proposal": prop.reason, "devices_off": len(off),
                          "J_current_forecast": j_cur, "J_new_forecast": ev["objective"], "util_new_forecast": ev["J"],
                          "new_copies": mig["new_copies"], "migration_gb": mig["bytes"] / 1e9,
@@ -307,7 +308,8 @@ class PlacementAgent:
                 prop = Proposal(t, "restore", plan_n, topo_n, j_cur, ev["objective"], mig, True, off, ev["J"])
                 ok, _, reasons = self.authoriser.check(prop, False, ev["residency_violation_assignments"])
                 self.proposals.append({"t": t, "proposal": prop, "authoriser_ok": ok, "needs_human": False,
-                                       "human_decision": "not required (mandatory restore)", "reasons": reasons})
+                                       "human_decision": "not required (mandatory restore)", "reasons": reasons,
+                                       "current_plan": self.plan, "current_topo": self.topo})
                 if ok:
                     chosen = (plan_n, topo_n, off)
                     entry = {**(entry or {}), "proposal": "restore", "approved_by": "authoriser (mandatory)",
