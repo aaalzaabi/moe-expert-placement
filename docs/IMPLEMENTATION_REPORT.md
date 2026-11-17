@@ -304,7 +304,9 @@ was in fact checkpoint-derived, a dashboard that labelled load proxies as utilis
 evidence pipeline itself caught a generated mistake: new evidence CSVs failed the provenance test until the folder
 was registered.
 
-# 8. Limitations and future improvements
+# 8. Limitations and roadmap to the final deliverable
+
+## 8.1 Known limitations
 
 | Limitation | Effect | Next step |
 |---|---|---|
@@ -319,6 +321,92 @@ was registered.
 
 Trade-offs accepted: a heuristic over an exact solver (speed, explainability); conservatism over risky migration;
 local-first simplicity over a distributed deployment that could not be tested.
+
+## 8.2 Remaining work, in priority order
+
+The plan keeps the proposal's budget of about 80 hours over four weeks (proposal, "Work plan and final
+acceptance"). Work is ordered so that each week leaves the system releasable: the core stays green in CI throughout,
+and items that depend on hardware the project does not have are last and may be reported as unfinished.
+
+| Week | Work | Done when | Depends on |
+|---|---|---|---|
+| 1 | **Data.** Profile ≥ 100 prompts across the three categories, including decode tokens (64–256 generated), with a fixed 60/20/20 split by request; re-run placement, migration (30 seeds) and the six agent use cases on the new split | new routing file passes the top-8 schema checks; `EVIDENCE.md` regenerated; results compared with the 6- and 24-prompt numbers, whichever way they move | OLMoE checkpoint on the host (~15 GB RAM) |
+| 2 | **Controller and planner quality.** Rolling forecast window and an expected-cost decision rule for the migration controller; validate the analytic multi-site latency model against the event simulator | controller decision accuracy reported against hindsight on the new data; model-vs-simulator error per use case reported | week 1 data |
+| 3 | **Production hardening of the service.** Authentication (OIDC proxy; approver taken from the identity, not the request body); Prometheus `/metrics`; versioned schema migrations (Alembic) instead of `create_all`; structured JSON logs | API rejects unauthenticated calls; approver recorded from identity; metrics scraped in Compose; schema upgrade tested from the submitted version | — |
+| 3 | **Deployment** (section 8.5) | the published image runs on the target host, with health checks passing | hardening above |
+| 4 | **End-to-end and failure-case testing** (sections 8.3–8.4), demonstration, final report | both test plans executed against the deployed system, results in `EVIDENCE.md` | weeks 1–3 |
+| Stretch | Calibrate the simulator on NVIDIA GPUs and run a real migration executor (`docs/FUTURE_GPU_VALIDATION.md`) | measured vs simulated p95 within ±20 % | multi-GPU access, not yet available |
+
+If multi-GPU access does not materialise, the stretch item stays unfinished and is reported as such; simulated
+results will not be presented as hardware measurements.
+
+## 8.3 End-to-end testing plan
+
+End-to-end tests already exist at two levels and will be extended rather than replaced:
+
+* **API workflow** — `scripts/smoke_e2e.py` drives the full operator workflow over real HTTP (14 checks, passing on
+  SQLite and PostgreSQL, run in CI on every push).
+* **UI** — Streamlit AppTest renders every page and clicks through the guided story and the approval flow.
+
+For the final deliverable:
+
+1. **Against the deployed system, not only a local container.** Run `smoke_e2e.py` against the deployed URL after
+   every release, with a throw-away database, and fail the release if any check fails.
+2. **Dashboard → API path.** Today the dashboard calls `moeplace` directly. Add an end-to-end scenario in which a
+   proposal is created through the API, approved by a named user, applied, and then shown as the active plan in the
+   dashboard and the audit log.
+3. **New data end to end.** Profile → schema check → plan → proposal → apply, on the week-1 prompts, asserting that
+   the stored plan matches the placement computed offline from the same file (same SHA-256 run id).
+4. **Authenticated workflow.** Repeat the operator workflow with two identities (operator, approver) and check that
+   an operator cannot approve their own large or residency-affecting proposal.
+5. **Load.** Extend `scripts/bench_api.py` from 50 sequential calls to concurrent clients; report p50/p95 and error
+   rate, and check that concurrent `apply` calls leave exactly one active plan.
+
+## 8.4 Failure-case testing plan
+
+Several failure cases are already tested at component level; the final deliverable adds the cases that need the
+whole system running.
+
+| Dependency or event | Injected how | Expected behaviour | Today |
+|---|---|---|---|
+| Routing data missing or corrupt | delete / truncate the CSV | `/health` returns 503; schema error lists every problem; nothing is written | tested (unit + API) |
+| Stale proposal (active plan changed) | apply two proposals built on the same base | second apply returns 409; active plan unchanged | tested (API + e2e) |
+| Request rejected part-way | scenario that fails planning after validation | no proposal and no audit row written | tested (API) |
+| Failure inside a state change | force an exception between the plan and audit inserts | whole transaction rolled back; no partial proposal, plan or audit row | planned (one transaction per change is implemented; the injected-fault test is not) |
+| Migration copy fails part-way | `fail_after_copies` in the simulator | old layout stays active; no request sees a mixed layout | tested (simulator) |
+| Model checkpoint absent | run without `models/` | live-prompt page says the model is unavailable; every other page works | covered implicitly: CI and Docker have no checkpoint and every page test passes; no dedicated assertion yet |
+| **Database unavailable** | stop the PostgreSQL container during a run, then restart it | requests return 503 with a request id, not 500; service recovers without restart (`pool_pre_ping`) | planned |
+| **Database slow** | add latency with `tc netem` on the database network | requests fail within a set timeout; no duplicate proposal on client retry (idempotency key) | planned |
+| **API down while the dashboard is open** | stop the API container | dashboard shows a clear error and keeps working on saved results | planned (after 8.3 item 2) |
+| **Container restart during apply** | kill the API between commit and response | after restart exactly one active plan; audit log consistent; client retry is idempotent | planned |
+| **Expired or missing credentials** | call with no token / wrong role | 401 / 403; nothing written; attempt logged | planned (needs authentication) |
+| **Out of memory in live inference** | limit container memory | live page reports the error; other users unaffected (inference lock released) | planned |
+
+Each planned case becomes an automated test where it can run in CI (Compose-based), and a scripted manual check
+where it cannot (for example `tc netem`), with results recorded in `EVIDENCE.md`.
+
+## 8.5 Deployment plan
+
+Deployment is out of scope for this deliverable, but its base already exists: a non-root Docker image, Docker Compose
+with SQLite and PostgreSQL profiles, and GitHub Actions. After submission, CI was extended so that every commit to
+`main` that passes all tests publishes the image to GitHub Container Registry, tagged with the commit SHA.
+
+| Step | Plan | Reason |
+|---|---|---|
+| Target | one small Linux VM running Docker Compose: API, dashboard, PostgreSQL 16 | the system is a planner, not a serving cluster; one host is enough and easy to explain and reproduce |
+| Release | the VM pulls the image by commit SHA from GHCR; `smoke_e2e.py` runs against it; failure → redeploy previous SHA | every release traceable to a tested commit; one-command rollback |
+| Edge | reverse proxy with TLS and the OIDC proxy in front of the API and dashboard; only ports 80/443 open | the API is currently safe only on localhost |
+| Secrets | database password and OIDC client secret from environment / the host's secret store, never in git or the image | already the rule for `MOE_PG_PASSWORD` |
+| Data | PostgreSQL on a persistent volume with a daily `pg_dump`; restore tested once | the audit log is the system's record of decisions |
+| Observability | `/metrics` scraped by Prometheus, a minimal Grafana board (request rate, p95, error rate, proposals by status), container health checks | find problems without reading logs |
+| Model | the live-prompt page stays a host-only feature; the deployed image has no torch and no checkpoint | keeps the image under 1 GB and avoids a 13.8 GB download on the VM |
+
+## 8.6 Final acceptance
+
+The final deliverable is complete when: CI is green; the deployed system passes the end-to-end suite; every
+"planned" failure case in 8.4 has a recorded result; the week-1 data re-runs are reported whether or not they
+confirm the current numbers; and anything not achieved (most likely the GPU validation) is listed as unfinished
+with its impact.
 
 # 9. Individual contributions
 
