@@ -201,7 +201,13 @@ pressed, in memory. The dashboard never writes files, and it loads OLMoE only wh
   and the dashboard read them.
 * `.github/workflows/ci.yml` runs on every push and pull request: Python 3.11, installs `requirements-ci.txt`
   (streamlit, plotly, pandas, numpy, fastapi, sqlalchemy; no torch, no model download), then runs the full
-  unittest suite and the reproduction tests.
+  unittest suite and the reproduction tests. A second job builds the Docker image, runs the tests inside it and
+  the end-to-end workflow on SQLite and PostgreSQL.
+* CD: when both jobs pass on `main` (or on a `v*` version tag), the `publish` job pushes the image to GitHub
+  Container Registry as `ghcr.io/aaalzaabi/moe-expert-placement`, tagged `latest` and `sha-<commit>` (plus
+  `1.2.3` / `1.2` for a tag `v1.2.3`). Pull requests and other branches are tested but never published.
+  Run the published image without building:
+  `docker run -p 8000:8000 ghcr.io/aaalzaabi/moe-expert-placement:latest`
 * Repository: https://github.com/aaalzaabi/moe-expert-placement. CI results are under the repository's
   **Actions** tab.
 
