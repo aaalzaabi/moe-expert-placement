@@ -1,4 +1,3 @@
-import json
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -24,13 +23,6 @@ EXAMPLES = ["What is the capital of France?", "Write a Python function that reve
 def real_model(api_version: str = "answer-v1") -> LM.Loaded:
     """Versioned resource so routing-only cached model instances are not reused."""
     return LM.load("bfloat16")
-
-
-@st.cache_data(show_spinner=False, max_entries=16)
-def traces(cfg_json: str) -> dict[str, pd.DataFrame]:
-    cfg = C.SimConfig.from_dict(json.loads(cfg_json))
-    pl = ui.plan(cfg_json)
-    return {s: V.placement_trace(pl, s, cfg) for s in C.STRATEGIES}
 
 
 def use_example():
@@ -168,7 +160,7 @@ with st.container(border=True):
         "Placement method", list(C.STRATEGIES), default="demand_aware", key="mp_strategy",
         format_func=lambda s: {"static": "Static (simple)", "balanced": "Load-balanced",
                                "demand_aware": "Demand-aware (ours)"}[s]) or "demand_aware"
-    tr = traces(cfg_json)
+    tr = V.placement_traces(cfg_json)
     pl = ui.plan(cfg_json)
     work = {s: V.question_work(r, LM.PROMPT_ID, pl, s, cfg) for s in C.STRATEGIES}
     ymax = max(per.to_numpy().max() for _, per in work.values())

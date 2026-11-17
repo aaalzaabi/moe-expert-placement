@@ -66,6 +66,20 @@ class TestGpuViz(unittest.TestCase):
         active, per = V.question_work(ui.routing(), 3, self.pl, "static", self.cfg)
         self.assertEqual(len(V.fig_question_animation(self.tr["static"], active, per, self.cfg, "q").frames), C.NUM_LAYERS)
 
+    def test_motion_page_uses_the_same_placement(self):
+        import placement_motion as PM
+        for s, t in self.tr.items():
+            with self.subTest(strategy=s):
+                d = PM.motion_data(t, self.cfg)
+                self.assertEqual(d["gpu"], t.gpu_id.tolist())
+                self.assertEqual(d["slot"], t.slot.tolist())
+                self.assertAlmostEqual(d["ymax"], float(V.busy_time(t, self.cfg).max()))
+        page = PM.placement_motion_html(self.tr["demand_aware"], self.cfg, "Demand-aware <x>", "busiest first")
+        self.assertNotIn("__DATA__", page)
+        self.assertNotIn("__TITLE__", page)
+        self.assertIn("Demand-aware &lt;x&gt;", page)
+        self.assertNotIn("<script src", page)
+
 
 if __name__ == "__main__":
     unittest.main()

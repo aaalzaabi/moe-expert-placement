@@ -12,11 +12,13 @@ not measured GPU time. Pure pandas/plotly so the functions can be tested without
 """
 from __future__ import annotations
 
+import json
 import math
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
 
 import ui
@@ -83,6 +85,14 @@ def placement_trace(placements: pd.DataFrame, strategy: str, cfg: C.SimConfig) -
     t["work_after"] = t.groupby("gpu_id").train_demand.cumsum()
     t["time_after"] = t.work_after / np.asarray(cfg.gpu_speeds, float)[t.gpu_id]
     return t
+
+
+@st.cache_data(show_spinner=False, max_entries=16)
+def placement_traces(cfg_json: str) -> dict[str, pd.DataFrame]:
+    """placement_trace for every strategy, cached per configuration (shared by the dashboard pages)."""
+    cfg = C.SimConfig.from_dict(json.loads(cfg_json))
+    pl = ui.plan(cfg_json)
+    return {s: placement_trace(pl, s, cfg) for s in C.STRATEGIES}
 
 
 def busy_time(trace: pd.DataFrame, cfg: C.SimConfig, upto: int | None = None) -> np.ndarray:

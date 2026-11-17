@@ -1,7 +1,6 @@
 import json
 
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -38,16 +37,9 @@ st.caption(f"Simulated cluster: {ui.scenario_summary(cfg)}. Change it under *Cha
 
 
 @st.cache_data(show_spinner=False, max_entries=16)
-def traces(cfg_json: str) -> dict[str, pd.DataFrame]:
-    cfg = C.SimConfig.from_dict(json.loads(cfg_json))
-    pl = ui.plan(cfg_json)
-    return {s: V.placement_trace(pl, s, cfg) for s in C.STRATEGIES}
-
-
-@st.cache_data(show_spinner=False, max_entries=16)
 def placing_figure(cfg_json: str, strategy: str) -> go.Figure:
     cfg = C.SimConfig.from_dict(json.loads(cfg_json))
-    tr = traces(cfg_json)
+    tr = V.placement_traces(cfg_json)
     ymax = max(V.busy_time(t, cfg).max() for t in tr.values())
     return V.fig_placement_animation(tr[strategy], cfg, ui.STRATEGY_LABEL[strategy], ymax=ymax)
 
@@ -65,11 +57,11 @@ def question_figure(cfg_json: str, request_id: int, strategy: str) -> go.Figure:
     q = question(cfg_json, request_id)
     ymax = max(per.to_numpy().max() for _, per in q.values())
     active, per = q[strategy]
-    return V.fig_question_animation(traces(cfg_json)[strategy], active, per, cfg,
+    return V.fig_question_animation(V.placement_traces(cfg_json)[strategy], active, per, cfg,
                                     f"Question {request_id} · {ui.STRATEGY_LABEL[strategy]}", ymax=ymax)
 
 
-tr = traces(cfg_json)
+tr = V.placement_traces(cfg_json)
 trace = tr[strategy]
 
 # ---------------------------------------------------------------- 1. placing

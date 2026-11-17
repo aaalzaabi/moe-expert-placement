@@ -1,9 +1,11 @@
 """One picture per scene, based on existing saved evidence and the existing placement visualiser."""
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 import ui
 import gpu_viz as G
 import ms_views as V
+import placement_motion as PM
 
 SCENES = ['Meet the experts', 'See the uneven demand', 'Place them on GPUs',
           'Check the cost of moving', 'Meet the operations agent', 'What did we learn?']
@@ -52,15 +54,21 @@ elif step == 1:
     notes += 'We use three questions to plan and hold back three to check the plan. The sample remains small.'
     details = ('app_pages/routing.py', 'Explore the measured data')
 elif step == 2:
-    st.markdown('Each small square is **one expert**. Each large group is a **simulated GPU**. Press **Play** to watch all 1,024 experts being placed.')
+    st.markdown('Each small square is **one expert**. Each large group is a **simulated GPU**. Watch all 1,024 experts '
+                'fly into place; brighter squares are busier experts, and the bars show how much work each GPU gets.')
     ui.badge('simulated')
     method = st.segmented_control('Compare two methods', ['static', 'demand_aware'], default='demand_aware',
                                   format_func=lambda x: 'Simple placement' if x == 'static' else 'Demand-aware placement', key='present_method') or 'demand_aware'
-    pl = ui.plan(ui.cfg_key(ui.C.DEFAULT))
-    tr = G.placement_trace(pl, method, ui.C.DEFAULT)
-    ui.chart(G.fig_placement_animation(tr, ui.C.DEFAULT, ui.STRATEGY_LABEL[method]),
-             'All 1024 experts assigned to four simulated GPUs, with estimated work per GPU', height=450,
-             key=f'present_gpu_{method}')
+    traces = G.placement_traces(ui.cfg_key(ui.C.DEFAULT))
+    # same bar scale for both methods, so the uneven simple placement is visible at a glance
+    ymax = max(float(G.busy_time(traces[m], ui.C.DEFAULT).max()) for m in ('static', 'demand_aware'))
+    order = 'in model order' if method == 'static' else 'busiest first'
+    components.html(PM.placement_motion_html(traces[method], ui.C.DEFAULT, ui.STRATEGY_LABEL[method], order, ymax),
+                    height=PM.HEIGHT)
+    with st.expander('Step through the placement frame by frame', icon=':material/slow_motion_video:'):
+        ui.chart(G.fig_placement_animation(traces[method], ui.C.DEFAULT, ui.STRATEGY_LABEL[method], ymax=ymax),
+                 'All 1024 experts assigned to four simulated GPUs, with estimated work per GPU', height=450,
+                 key=f'present_gpu_{method}')
     takeaway = f'On the three held-out questions, demand-aware placement reduces the busiest GPU’s load proxy by {cut:.1f}%.'
     notes = 'The picture uses training demand to construct the plan; the headline improvement is checked on held-out questions. '
     notes += 'Fast GPUs can handle more work. Speeds 1.0, 1.3, 0.8 and 1.6 are assumptions. These bars show a load proxy, not measured utilisation or milliseconds.'
