@@ -26,5 +26,5 @@ def prepare(outputs: list[str], measured: bool = False) -> None:
     else:
         lines += ["To run new simulations into outputs/runs/ instead, use:",
                   "  python scripts/run_experiment.py --help"]
-    lines += [f"Re-run with --force to overwrite (back the files up first)."]
+    lines += ["Re-run with --force to overwrite (back the files up first)."]
     sys.exit("\n".join(lines))

@@ -129,7 +129,7 @@ flowchart LR
         elif step == 7:
             d = ui.csv("policy_decision.csv").iloc[0]
             st.markdown(f"### Decision: :red[{d.decision.upper()}]")
-            checks = [(f"Migration feasible (staging memory)", bool(d.migration_feasible)),
+            checks = [("Migration feasible (staging memory)", bool(d.migration_feasible)),
                       (f"Forecast makespan gain {d.forecast_makespan_gain_pct:+.2f}% ≥ {d.min_makespan_gain_pct:.0f}%",
                        d.forecast_makespan_gain_pct >= d.min_makespan_gain_pct),
                       (f"Forecast p95 change {d.forecast_p95_regression_pct:+.2f}% ≤ {d.max_p95_regression_pct:+.0f}%",

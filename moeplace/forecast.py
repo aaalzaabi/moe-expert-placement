@@ -42,7 +42,7 @@ decision-weighted WAPE measures error on exactly those experts.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import itertools
 
 import numpy as np

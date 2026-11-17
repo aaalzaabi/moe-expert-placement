@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 import ui
-from ui import C, D
+from ui import D
 
 st.title("Start here")
 st.markdown("#### Where should the parts of a large AI model live on GPUs, and when is it worth moving them?")

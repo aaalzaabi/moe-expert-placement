@@ -21,6 +21,7 @@ Produce the replicate runs first with
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import math
 import sys
@@ -94,7 +95,7 @@ class TimingResult(unittest.TextTestResult):
 
 def run_tests() -> pd.DataFrame:
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), top_level_dir=str(ROOT))
-    runner = unittest.TextTestRunner(resultclass=TimingResult, verbosity=0, stream=open("/dev/null", "w"))
+    runner = unittest.TextTestRunner(resultclass=TimingResult, verbosity=0, stream=io.StringIO())
     t0 = time.perf_counter()
     result = runner.run(suite)
     df = pd.DataFrame(result.rows)

@@ -5,7 +5,6 @@ import numpy as np
 
 from tests.helpers import routing
 from moeplace import forecast as F
-from moeplace import multisite as M
 from moeplace import usecases as U
 from moeplace import workload as WL
 

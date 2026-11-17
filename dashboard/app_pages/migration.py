@@ -192,7 +192,7 @@ with ui.more("try it yourself — decision sandbox and policy comparison"):
                      "  Proposed --> Rejected", "  Approved --> Transferring", "  Approved --> Failed: staging memory",
                      "  Transferring --> Active: all copies landed", "  Transferring --> Failed: copy error / rollback",
                      "  Active --> [*]", "  Rejected --> [*]", "  Failed --> [*]",
-                     f"  classDef current fill:#0f766e,stroke:#5eead4,color:#ffffff,font-weight:bold",
+                     "  classDef current fill:#0f766e,stroke:#5eead4,color:#ffffff,font-weight:bold",
                      f"  class {cur.capitalize()} current"]
             st.mermaid_chart("\n".join(lines), alt=f"Migration state machine; current state {cur}")
             st.markdown(f"Current state: **{cur.upper()}**")

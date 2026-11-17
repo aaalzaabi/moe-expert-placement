@@ -22,14 +22,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
 from moeplace import agent as A  # noqa: E402
 from moeplace import data as D  # noqa: E402
 from moeplace import experiment as E  # noqa: E402
 from moeplace import forecast as F  # noqa: E402
-from moeplace import multisite as M  # noqa: E402
 from moeplace import usecases as U  # noqa: E402
 
 ASSUMPTIONS = ("Site traffic, device speeds, bandwidth, RTT, throughput and events are HYPOTHETICAL. Expert-routing "

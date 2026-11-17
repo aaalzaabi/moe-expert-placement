@@ -15,7 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from dataclasses import asdict, dataclass, field, fields, replace
+from dataclasses import asdict, dataclass, fields, replace
 
 # --------------------------------------------------------------------------
 # Real model facts (from models/OLMoE-1B-7B-0125-Instruct/config.json and

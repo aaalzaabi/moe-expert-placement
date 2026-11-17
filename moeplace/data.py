@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 from . import config as C
-from .paths import MEASUREMENTS, MODEL_DIR, OUTPUTS, PHASE4F, require
+from .paths import MEASUREMENTS, MODEL_DIR, OUTPUTS, require
 
 # Required columns for each saved CSV (relative to outputs/).
 SCHEMAS: dict[str, set[str]] = {

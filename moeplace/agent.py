@@ -18,8 +18,8 @@ profiles. It is a simulation of agent behaviour, not a production deployment.
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
-from typing import Callable
+from dataclasses import dataclass
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd

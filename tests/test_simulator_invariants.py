@@ -23,7 +23,7 @@ def no_overlap(intervals: pd.DataFrame) -> bool:
 class TestLayerDependencies(unittest.TestCase):
     def test_layers_are_sequential_per_request(self):
         res = run(C.DEFAULT.with_(bandwidth_gb_per_s=3.0))
-        for rid, lay in res.layers.groupby("request_id"):
+        for _rid, lay in res.layers.groupby("request_id"):
             lay = lay.sort_values("layer_id")
             self.assertEqual(lay.layer_id.tolist(), list(range(16)))
             self.assertTrue((lay.start_ms.to_numpy()[1:] >= lay.end_ms.to_numpy()[:-1] - EPS).all())

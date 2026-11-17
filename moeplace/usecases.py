@@ -6,7 +6,7 @@ supports, its KPIs and the governance obligations it raises (detailed in docs/GO
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 
 import numpy as np
 import pandas as pd

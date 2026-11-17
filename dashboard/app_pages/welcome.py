@@ -1,6 +1,5 @@
 """Presentation entrance: one purpose, one starting action, no experiment controls."""
 import streamlit as st
-import ui
 
 st.caption('MoE Expert Placement Planner · Research demonstration')
 st.title('Where should the experts live?')

@@ -2,7 +2,6 @@
 import json
 import unittest
 
-import pandas as pd
 
 from tests.helpers import C, D, routing
 from moeplace.paths import OUTPUTS

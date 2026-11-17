@@ -23,7 +23,7 @@ from moeplace import data as D  # noqa: E402
 from moeplace import placement as P  # noqa: E402
 from moeplace import policy as POL  # noqa: E402
 from moeplace import simulator as S  # noqa: E402
-from moeplace.registry import BY_PATH, KIND_LABEL  # noqa: E402
+from moeplace.registry import BY_PATH  # noqa: E402
 
 # ------------------------------------------------------------------ palette
 TEAL, BLUE, VIOLET, AMBER, PINK, SLATE, GREEN, RED = (
