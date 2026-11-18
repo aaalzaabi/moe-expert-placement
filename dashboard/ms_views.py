@@ -334,8 +334,27 @@ _CHECK_EXPLAIN = [
 ]
 
 
+_GAIN = re.compile(r"^forecast objective gain ([+-]?\d+(?:\.\d+)?)% >= (\d+(?:\.\d+)?)%$")
+
+
+def check_label(text: str) -> str:
+    """Display form of an authoriser check string.
+
+    The recorded string ("forecast objective gain -0.6% >= 2%") states the rule, which reads as a false claim when
+    the check fails; show the value and the requirement separately instead. Recorded audit data is not changed.
+    """
+    m = _GAIN.match(text)
+    return f"forecast objective gain {m.group(1)}% (needs ≥ {m.group(2)}%)" if m else text
+
+
 def explain_check(text: str) -> tuple[str, str]:
     """(what it means, what would change it) for one authoriser check string."""
+    m = _GAIN.match(text)
+    if m and float(m.group(1)) <= 0:
+        # A lower threshold would not help here: the proposal is no better than the plan already running.
+        return ("The proposed plan is forecast to be no better than the current one (the fast heuristic planner does "
+                "not always beat the plan already running), so keeping the current plan is the right decision.",
+                "Nothing needs to change. A real shift in demand would let the planner find a clearly better plan.")
     for prefix, meaning, change in _CHECK_EXPLAIN:
         if text.startswith(prefix):
             return meaning, change
@@ -349,7 +368,7 @@ def explain_proposal(p: dict) -> str | None:
         lines = [f"**Rejected by the authoriser** — {len(failed)} rule(s) failed:"]
         for t in failed:
             meaning, change = explain_check(t)
-            lines.append(f"- *{t}* → {meaning} **What would change it:** {change}")
+            lines.append(f"- *{check_label(t)}* → {meaning} **What would change it:** {change}")
         lines.append("The current plan stays in place; nothing is copied.")
         return "\n".join(lines)
     if p.get("needs_human") and str(p.get("human_decision", "")).startswith(("deny", "denied")):
@@ -371,7 +390,7 @@ def blocked_reasons(dec: pd.DataFrame | None) -> pd.DataFrame:
         for part in str(r.reasons).split(" | "):
             if part.startswith("FAIL: "):
                 meaning, change = explain_check(part[6:])
-                out.append({"t": r.t, "proposal": getattr(r, "proposal", ""), "failed check": part[6:],
+                out.append({"t": r.t, "proposal": getattr(r, "proposal", ""), "failed check": check_label(part[6:]),
                             "what it means": meaning, "what would change it": change, "action": r.action})
     return pd.DataFrame(out, columns=["t", "proposal", "failed check", "what it means", "what would change it", "action"])
 

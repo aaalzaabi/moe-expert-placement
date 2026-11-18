@@ -371,6 +371,24 @@ class TestGovernanceViews(unittest.TestCase):
         rules = V.approval_rules()
         self.assertTrue((rules.type == "human approval").sum() >= 3)
 
+    def test_gain_check_wording(self):
+        # The recorded rule string is shown as value + requirement, not as a false inequality.
+        self.assertEqual(V.check_label("forecast objective gain -0.6% >= 2%"),
+                         "forecast objective gain -0.6% (needs ≥ 2%)")
+        self.assertEqual(V.check_label("transfer 1 s <= 180 s"), "transfer 1 s <= 180 s")
+        # A plan no better than the current one: lowering the threshold would not help, so do not suggest it.
+        _, change = V.explain_check("forecast objective gain -0.6% >= 2%")
+        self.assertNotIn("threshold", change)
+        _, change = V.explain_check("forecast objective gain +1.2% >= 2%")
+        self.assertIn("threshold", change)
+        # The reason string the authoriser actually produces must still match.
+        ok, _, reasons = A.Authoriser(A.AgentConfig(), 3600).check(
+            type("P", (), dict(J_current_forecast=1.0, J_new_forecast=1.006, util_new_forecast=0.5, mandatory=False,
+                               devices_off=(), migration={"est_time_s": 1.0, "bytes": 1e9}))(), False, 0.0)
+        gain = [t for t, _ in reasons if t.startswith("forecast objective gain")][0]
+        self.assertFalse(ok)
+        self.assertEqual(V.check_label(gain), "forecast objective gain -0.6% (needs ≥ 2%)")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -128,6 +128,11 @@ with st.container(border=True):
                                'stays until it is approved.', icon=':material/pan_tool:')
                 elif not applied and not lay[['added', 'removed']].to_numpy().any():
                     pass  # identical layouts: the "no change proposed" note above already explains it
+                elif not applied and all(ok for _, ok in prop['reasons']):
+                    # Every rule passed, so the only way it was not applied is a person denying the approval.
+                    st.warning('This proposal was **not applied: a person denied it**. All automatic checks passed, but '
+                               'the change needed human approval. The current layout stays; the faded green and violet '
+                               'bars show only what was considered.', icon=':material/block:')
                 elif not applied:
                     st.warning('This proposal was **not applied**: it failed a check (see **Check**). The current '
                                'layout stays; the faded green and violet bars show only what was considered.', icon=':material/block:')
@@ -172,7 +177,7 @@ with st.container(border=True):
                 st.markdown(f"**Proposal {i + 1}: {prop['proposal'].reason}**")
             for reason, passed in prop['reasons']:
                 icon = ':material/check_circle:' if passed else ':material/cancel:'
-                st.markdown(f"{icon} **{'PASS' if passed else 'FAIL'}** · {reason}")
+                st.markdown(f"{icon} **{'PASS' if passed else 'FAIL'}** · {V.check_label(reason)}")
                 if not passed:
                     meaning, change = V.explain_check(reason)
                     st.caption(f'{meaning} What would change it: {change}')
